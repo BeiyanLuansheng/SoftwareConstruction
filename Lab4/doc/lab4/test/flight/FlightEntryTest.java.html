@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>FlightEntryTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">flight</a> &gt; <span class="el_source">FlightEntryTest.java</span></div><h1>FlightEntryTest.java</h1><pre class="source lang-java linenums">package flight;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.plan.PlanningEntryInstanceTest;
+
+<span class="fc" id="L11">public class FlightEntryTest extends PlanningEntryInstanceTest&lt;Plane&gt; {</span>
+
+	// Test strategy
+	// 测试allocatePlane()
+	// 状态可分配资源，状态不可分配资源
+	// 测试getResource()
+	// 测试返回的资源与期望的是否相同
+	// 测试getDeparture()和getArrival()
+	// 测试返回的位置是否与期望的相同
+	// 测试getTimeslot()
+	// 测试返回的时刻表是否和预期的相同
+	// 测试compareTo()
+	// 在pe之前开始，在pe之后开始，在pe同时开始
+
+<span class="fc" id="L25">	final Location departure = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L26">	final Location arrival = new Location(&quot;Shanghai&quot;, true);</span>
+
+	@Override
+	public PlanningEntry&lt;Plane&gt; entryInstance() {
+<span class="fc" id="L30">		String start = &quot;2020-04-27 14:00&quot;;</span>
+<span class="fc" id="L31">		String end = &quot;2020-04-27 15:00&quot;;</span>
+<span class="fc" id="L32">		return PlanningEntry.flightEntry(name, departure, arrival, start, end);</span>
+	}
+
+	@Test
+	public void testAllocatePlane() {
+<span class="fc" id="L37">		PlanningEntry&lt;Plane&gt; pe = entryInstance();</span>
+		//状态可分配资源
+<span class="fc" id="L39">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L40">		assertTrue(((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane));</span>
+		//状态不可分配资源
+<span class="fc" id="L42">		pe.cancel();</span>
+<span class="fc" id="L43">		assertFalse(((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane));</span>
+<span class="fc" id="L44">	}</span>
+
+	@Test
+	public void testGetResource() {
+<span class="fc" id="L48">		PlanningEntry&lt;Plane&gt; pe = entryInstance();</span>
+<span class="fc" id="L49">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L50">		((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane);</span>
+<span class="fc" id="L51">		assertEquals(plane, ((FlightEntry&lt;Plane&gt;) pe).getResource());</span>
+<span class="fc" id="L52">	}</span>
+
+	@Test
+	public void testGetDepartureAndGetArrival() {
+<span class="fc" id="L56">		PlanningEntry&lt;Plane&gt; pe = entryInstance();</span>
+<span class="fc" id="L57">		Location departure = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L58">		Location arrival = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L59">		assertEquals(departure, ((FlightEntry&lt;Plane&gt;) pe).getDeparture());</span>
+<span class="fc" id="L60">		assertEquals(arrival, ((FlightEntry&lt;Plane&gt;) pe).getArrival());</span>
+<span class="fc" id="L61">	}</span>
+
+	@Test
+	public void testCompareTo() {
+<span class="fc" id="L65">		PlanningEntry&lt;Plane&gt; pe = entryInstance();</span>
+		//在pe之前开始
+<span class="fc" id="L67">        PlanningEntry&lt;Plane&gt; beforePe = PlanningEntry.flightEntry(name, departure, arrival, &quot;2020-04-27 13:00&quot;, &quot;2020-04-27 14:00&quot;);</span>
+<span class="fc" id="L68">        assertEquals(1, pe.compareTo(beforePe));</span>
+        //在pe之后开始
+<span class="fc" id="L70">        PlanningEntry&lt;Plane&gt; afterPe = PlanningEntry.flightEntry(name, departure, arrival, &quot;2020-04-27 15:00&quot;, &quot;2020-04-27 16:00&quot;);</span>
+<span class="fc" id="L71">        assertEquals(-1, pe.compareTo(afterPe));</span>
+        //与pe同时开始
+<span class="fc" id="L73">        PlanningEntry&lt;Plane&gt; equalPe = PlanningEntry.flightEntry(name, departure, arrival, &quot;2020-04-27 14:00&quot;, &quot;2020-04-27 15:00&quot;);</span>
+<span class="fc" id="L74">        assertEquals(0, pe.compareTo(equalPe));</span>
+<span class="fc" id="L75">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

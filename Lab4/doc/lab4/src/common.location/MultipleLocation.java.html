@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MultipleLocation.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.location</a> &gt; <span class="el_source">MultipleLocation.java</span></div><h1>MultipleLocation.java</h1><pre class="source lang-java linenums">package common.location;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 一个immutable类型， 表示多个不可更改的位置
+ */
+<span class="pc bpc" id="L11" title="1 of 2 branches missed.">public class MultipleLocation implements MultipleLocationEntry {</span>
+
+	private final List&lt;Location&gt; locations;
+
+	// Abstraction function:
+	// AF(locations)=以locations中的对象为位置且按顺序排列的一组位置
+	// Representation invariant:
+	// locations!=null
+	// locations中不能有重复的车站
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+	// 返回位置列表时使用Collections.unmodifiableList()返回一个不可修改的列表
+
+	/**
+	 * 创建一组途径的位置
+	 * 
+	 * @param locations 途径位置的列表，非空，不能有重复的车站
+	 */
+<span class="fc" id="L29">	public MultipleLocation(List&lt;Location&gt; locations) {</span>
+		// 不满足前置条件，抛出异常
+<span class="pc bpc" id="L31" title="1 of 4 branches missed.">		if (locations == null || locations.size() &lt; 2)</span>
+<span class="fc" id="L32">			throw new IllegalArgumentException(&quot;列表中的位置少于两个&quot;);</span>
+<span class="fc" id="L33">		Set&lt;Location&gt; locSet = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">		for (Location loc : locations) {</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">			if (locSet.contains(loc))</span>
+<span class="fc" id="L36">				throw new IllegalArgumentException(&quot;位置列表有重复位置&quot;);</span>
+<span class="fc" id="L37">			locSet.add(loc);</span>
+		}
+<span class="fc" id="L39">		this.locations = locations;</span>
+<span class="fc" id="L40">		checkRep();</span>
+<span class="fc" id="L41">	}</span>
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">		assert this.locations != null;</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">		assert this.locations.size() &gt;= 2;</span>
+<span class="fc" id="L49">		Set&lt;Location&gt; locSet = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">		for (Location loc : this.locations) {</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">			if (locSet.contains(loc))</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">				assert false;</span>
+<span class="fc" id="L53">			locSet.add(loc);</span>
+		}
+<span class="fc" id="L55">	}</span>
+
+	@Override
+	public List&lt;Location&gt; getLocations() {
+<span class="fc" id="L59">		checkRep();</span>
+<span class="fc" id="L60">		return Collections.unmodifiableList(locations);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

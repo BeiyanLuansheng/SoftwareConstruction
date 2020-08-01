@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>Carriage.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">train</a> &gt; <span class="el_source">Carriage.java</span></div><h1>Carriage.java</h1><pre class="source lang-java linenums">package train;
+
+/**
+ * 一个immutable的类型，代表一个火车车厢
+ */
+<span class="pc bpc" id="L6" title="1 of 2 branches missed.">public class Carriage {</span>
+
+	private final int id;
+	private final String type;
+	private final int seats;
+	private final int manufactureYear;
+
+	// Abstraction function:
+	// AF(id,type,seats,manufactureYear)=以id为编号，type类型，
+	// 有seats个座位，出年份为manufactureYear的一个火车车厢
+	// Representation invariant:
+	// id &gt; 0
+	// type != null
+	// seats &gt; 0
+	// manufactureYear &gt; 0
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+
+	/**
+	 * 创建一个火车车厢
+	 * 
+	 * @param id              非负的车厢编号
+	 * @param type            非空的车厢类型
+	 * @param seats           定员数，大于0
+	 * @param manufactureYear 出场年份
+	 */
+<span class="fc" id="L32">	public Carriage(int id, String type, int seats, int manufactureYear) {</span>
+		// 不满足前置条件，抛出异常
+<span class="pc bpc" id="L34" title="4 of 8 branches missed.">		if (id &lt;= 0 || type == null || seats &lt;= 0 || manufactureYear &lt;= 0)</span>
+<span class="nc" id="L35">			throw new IllegalArgumentException(&quot;参数不合法&quot;);</span>
+<span class="fc" id="L36">		this.id = id;</span>
+<span class="fc" id="L37">		this.type = type;</span>
+<span class="fc" id="L38">		this.seats = seats;</span>
+<span class="fc" id="L39">		this.manufactureYear = manufactureYear;</span>
+<span class="fc" id="L40">		checkRep();</span>
+<span class="fc" id="L41">	}</span>
+
+	private void checkRep() {
+<span class="pc bpc" id="L44" title="2 of 4 branches missed.">		assert this.id &gt; 0;</span>
+<span class="pc bpc" id="L45" title="2 of 4 branches missed.">		assert this.type != null;</span>
+<span class="pc bpc" id="L46" title="2 of 4 branches missed.">		assert this.seats &gt; 0;</span>
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">		assert this.manufactureYear &gt; 0;</span>
+<span class="fc" id="L48">	}</span>
+
+	/**
+	 * 获得车厢的编号
+	 * 
+	 * @return 一个表示车厢编号的整数
+	 */
+	public int getID() {
+<span class="fc" id="L56">		checkRep();</span>
+<span class="fc" id="L57">		return id;</span>
+	}
+
+	/**
+	 * 获得车厢的类型
+	 * 
+	 * @return 一个表示车厢的字符串
+	 */
+	public String getType() {
+<span class="fc" id="L66">		checkRep();</span>
+<span class="fc" id="L67">		return type;</span>
+	}
+
+	/**
+	 * 获得车厢的定员数
+	 * 
+	 * @return 一个表示定员数的整数
+	 */
+	public int getSeats() {
+<span class="fc" id="L76">		checkRep();</span>
+<span class="fc" id="L77">		return seats;</span>
+	}
+
+	/**
+	 * 获得车厢的出场年份
+	 * 
+	 * @return 一个表示年份的整数
+	 */
+	public int getManufactureYear() {
+<span class="fc" id="L86">		checkRep();</span>
+<span class="fc" id="L87">		return manufactureYear;</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="fc" id="L92">		return type.hashCode();</span>
+	}
+
+	@Override
+	public boolean equals(Object carriage) {
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">		if (carriage instanceof Carriage) {</span>
+<span class="fc" id="L98">			Carriage c = (Carriage) carriage;</span>
+<span class="pc bpc" id="L99" title="2 of 6 branches missed.">			if (c.id == this.id &amp;&amp; c.type.equals(this.type) &amp;&amp; c.seats == this.seats</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">					&amp;&amp; c.manufactureYear == this.manufactureYear)</span>
+<span class="fc" id="L101">				return true;</span>
+		}
+<span class="fc" id="L103">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

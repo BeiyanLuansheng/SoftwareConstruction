@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>TwoLocation.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.location</a> &gt; <span class="el_source">TwoLocation.java</span></div><h1>TwoLocation.java</h1><pre class="source lang-java linenums">package common.location;
+
+/**
+ * 一个immutable类型，表示出发和抵达位置
+ */
+<span class="pc bpc" id="L6" title="1 of 2 branches missed.">public class TwoLocation implements TwoLocationEntry {</span>
+
+	private final Location departure, arrival;
+
+	// Abstraction function:
+	// AF(departure,arrival)=现实中从departure位置到arrival位置
+	// Representation invariant:
+	// departure!=null
+	// arrival!=null
+	// 两个位置不相同
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+
+	/**
+	 * 创建两个位置，出发位置和到达位置
+	 * 
+	 * @param departure 出发位置，非空
+	 * @param arrival   到达位置，非空，和出发位置不相同
+	 */
+<span class="fc" id="L25">	public TwoLocation(Location departure, Location arrival) {</span>
+		// 参数不符合前置条件，抛出异常
+<span class="pc bpc" id="L27" title="1 of 4 branches missed.">		if (departure == null || arrival == null)</span>
+<span class="fc" id="L28">			throw new IllegalArgumentException(&quot;参数为空&quot;);</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">		if (departure.equals(arrival))</span>
+<span class="fc" id="L30">			throw new IllegalArgumentException(&quot;出发地点和目的地点相同&quot;);</span>
+<span class="fc" id="L31">		this.departure = departure;</span>
+<span class="fc" id="L32">		this.arrival = arrival;</span>
+<span class="fc" id="L33">		checkRep();</span>
+<span class="fc" id="L34">	}</span>
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L40" title="2 of 4 branches missed.">		assert this.departure != null;</span>
+<span class="pc bpc" id="L41" title="2 of 4 branches missed.">		assert this.arrival != null;</span>
+<span class="pc bpc" id="L42" title="2 of 4 branches missed.">		assert !this.departure.equals(this.arrival);</span>
+<span class="fc" id="L43">	}</span>
+
+	@Override
+	public Location getDeparture() {
+<span class="fc" id="L47">		return departure;</span>
+	}
+
+	@Override
+	public Location getArrival() {
+<span class="fc" id="L52">		return arrival;</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="fc" id="L57">		return departure.getName() + &quot;-&gt;&quot; + arrival.getName();</span>
+	}
+
+	@Override
+	public boolean equals(Object twoLocation) {
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if (twoLocation instanceof TwoLocation) {</span>
+<span class="fc" id="L63">			TwoLocation loc = (TwoLocation) twoLocation;</span>
+<span class="pc bpc" id="L64" title="1 of 4 branches missed.">			if (this.departure.equals(loc.departure) &amp;&amp; this.arrival.equals(loc.arrival))</span>
+<span class="fc" id="L65">				return true;</span>
+		}
+<span class="fc" id="L67">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

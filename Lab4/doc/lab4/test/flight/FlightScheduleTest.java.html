@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>FlightScheduleTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">flight</a> &gt; <span class="el_source">FlightScheduleTest.java</span></div><h1>FlightScheduleTest.java</h1><pre class="source lang-java linenums">package flight;
+
+import static org.junit.Assert.*;
+import org.junit.rules.ExpectedException;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.time.Timeslot;
+
+import org.junit.Test;
+import org.junit.Rule;
+
+import exceptions.*;
+
+<span class="fc" id="L15">public class FlightScheduleTest {</span>
+
+	// Test stragey
+	// 测试addPlane()
+	// 飞机未在列表中，飞机已在列表中
+	// 测试removePlane()
+	// 飞机未在列表中，飞机在列表中，飞机正在被使用
+	// 测试addLocation()
+	// 位置未在列表中，位置已在列表中
+	// 测试removeLocation()
+	// 位置未在列表中，位置已在列表中，位置在使用中
+	// 测试addFlight()
+	// 计划项不存在，计划项已存在
+	// 测试cancelFlight()
+	// 计划项为空，计划项不为空可取消，计划项不为空不可取消
+	// 测试allocateFlight()
+	// 可分配资源，状态不允许分配资源，分配后导致与其他计划项产生资源独占冲突
+	
+	
+	@Rule
+<span class="fc" id="L35">	public ExpectedException exception = ExpectedException.none();</span>
+	
+	//test for addPlane
+	@Test
+	public void testAddPlane() {
+<span class="fc" id="L40">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L41">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+		//飞机未在列表中
+<span class="fc" id="L43">		assertTrue(fsa.addPlane(plane));</span>
+		//飞机已在列表中
+<span class="fc" id="L45">		assertFalse(fsa.addPlane(plane));</span>
+<span class="fc" id="L46">	}</span>
+	
+	//tests for removePlane
+	@Test
+	public void testRemovePlane() throws EntryUseResourceOrLocationException {
+<span class="fc" id="L51">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L52">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+		//飞机未在列表中
+<span class="fc" id="L54">		assertFalse(fsa.removePlane(plane));</span>
+		//飞机已在列表中
+<span class="fc" id="L56">		fsa.addPlane(plane);</span>
+<span class="fc" id="L57">		assertTrue(fsa.removePlane(plane));</span>
+<span class="fc" id="L58">	}</span>
+	
+	//飞机正在被使用
+	@Test(expected = EntryUseResourceOrLocationException.class)
+	public void testRemovePlaneException() throws ResourceOrLocationConflictException, EntryUseResourceOrLocationException {
+<span class="fc" id="L63">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L64">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L65">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L66">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L67">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L68">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L69">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L70">		fsa.addPlane(plane);</span>
+<span class="fc" id="L71">		fsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L72">		fsa.addLocation(departureLoc);</span>
+<span class="fc" id="L73">		fsa.addFlight(name,  departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L74">		PlanningEntry&lt;Plane&gt; fe = fsa.findFlightEntry(name, departureLoc.getName(), arrivalLoc.getName(), new Timeslot(start, end));</span>
+<span class="fc" id="L75">		fsa.allocateFlight(fe, plane);</span>
+<span class="fc" id="L76">		fe.running();</span>
+<span class="nc" id="L77">		fsa.removePlane(plane);</span>
+<span class="nc" id="L78">	}</span>
+	
+	// tests for addLocation
+	@Test
+	public void testAddLocation() {
+<span class="fc" id="L83">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L84">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+		// 位置不在列表中
+<span class="fc" id="L86">		assertTrue(fsa.addLocation(loc));</span>
+		// 位置已在列表中
+<span class="fc" id="L88">		assertFalse(fsa.addLocation(loc));</span>
+<span class="fc" id="L89">	}</span>
+	
+	// tests for removeLocation
+	@Test
+	public void testRemoveLocation() throws EntryUseResourceOrLocationException {
+<span class="fc" id="L94">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L95">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+		// 位置不在列表中
+<span class="fc" id="L97">		assertFalse(fsa.removeLocation(loc));</span>
+		// 位置已在列表中
+<span class="fc" id="L99">		fsa.addLocation(loc);</span>
+<span class="fc" id="L100">		assertTrue(fsa.removeLocation(loc));</span>
+<span class="fc" id="L101">	}</span>
+	
+	//位置正在被使用
+	@Test(expected = EntryUseResourceOrLocationException.class)
+	public void testRemoveLocationException() throws ResourceOrLocationConflictException, EntryUseResourceOrLocationException {
+<span class="fc" id="L106">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L107">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L108">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L109">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L110">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L111">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L112">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L113">		fsa.addPlane(plane);</span>
+<span class="fc" id="L114">		fsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L115">		fsa.addLocation(departureLoc);</span>
+<span class="fc" id="L116">		fsa.addFlight(name,  departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L117">		PlanningEntry&lt;Plane&gt; fe = fsa.findFlightEntry(name, departureLoc.getName(), arrivalLoc.getName(), new Timeslot(start, end));</span>
+<span class="fc" id="L118">		fsa.allocateFlight(fe, plane);</span>
+<span class="fc" id="L119">		fe.running();</span>
+<span class="nc" id="L120">		fsa.removeLocation(departureLoc);</span>
+<span class="nc" id="L121">	}</span>
+	
+	//tests for addFlight
+	@Test
+	public void testAddFlight() {
+<span class="fc" id="L126">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L127">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L128">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L129">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L130">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L131">		String end = &quot;2020-05-27 12:00&quot;;</span>
+		//计划项还不存在
+<span class="fc" id="L133">		assertTrue(fsa.addFlight(name, departureLoc, arrivalLoc, start, end));</span>
+		//计划项已经存在
+<span class="fc" id="L135">		assertFalse(fsa.addFlight(name, departureLoc, arrivalLoc, start, end));</span>
+<span class="fc" id="L136">	}</span>
+	
+	//tests for cancelFlight
+	@Test
+	public void testCancelFlight() throws CannotCancelledException, ResourceOrLocationConflictException {
+<span class="fc" id="L141">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L142">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L143">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L144">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L145">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L146">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L147">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L148">		fsa.addPlane(plane);</span>
+<span class="fc" id="L149">		fsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L150">		fsa.addLocation(departureLoc);</span>
+<span class="fc" id="L151">		fsa.addFlight(name,  departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L152">		PlanningEntry&lt;Plane&gt; fe = fsa.findFlightEntry(name, departureLoc.getName(), arrivalLoc.getName(), new Timeslot(start, end));</span>
+<span class="fc" id="L153">		fsa.allocateFlight(fe, plane);</span>
+		//计划项为空
+<span class="fc" id="L155">		assertFalse(fsa.cancelFlight(null));</span>
+		//计划项不为空，可取消
+<span class="fc" id="L157">		assertTrue(fsa.cancelFlight(fe));</span>
+<span class="fc" id="L158">	}</span>
+	
+	//不可取消的计划项
+	@Test(expected = CannotCancelledException.class)
+	public void testCancelFlightException() throws ResourceOrLocationConflictException, CannotCancelledException {
+<span class="fc" id="L163">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L164">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L165">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L166">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L167">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L168">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L169">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L170">		fsa.addPlane(plane);</span>
+<span class="fc" id="L171">		fsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L172">		fsa.addLocation(departureLoc);</span>
+<span class="fc" id="L173">		fsa.addFlight(name,  departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L174">		PlanningEntry&lt;Plane&gt; fe = fsa.findFlightEntry(name, departureLoc.getName(), arrivalLoc.getName(), new Timeslot(start, end));</span>
+<span class="fc" id="L175">		fsa.allocateFlight(fe, plane);</span>
+<span class="fc" id="L176">		fe.running();</span>
+<span class="nc" id="L177">		fsa.cancelFlight(fe);</span>
+<span class="nc" id="L178">	}</span>
+	
+	//tests for allocateFlight
+	@Test
+	public void testAllocateFlight() throws ResourceOrLocationConflictException {
+<span class="fc" id="L183">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L184">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L185">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L186">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L187">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L188">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L189">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L190">		fsa.addPlane(plane);</span>
+<span class="fc" id="L191">		fsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L192">		fsa.addLocation(departureLoc);</span>
+<span class="fc" id="L193">		fsa.addFlight(name,  departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L194">		PlanningEntry&lt;Plane&gt; fe = fsa.findFlightEntry(name, departureLoc.getName(), arrivalLoc.getName(), new Timeslot(start, end));</span>
+		//可以被分配资源
+<span class="fc" id="L196">		assertTrue(fsa.allocateFlight(fe, plane));</span>
+		//此时状态不可被分配资源
+<span class="fc" id="L198">		fe.running();</span>
+<span class="fc" id="L199">		assertFalse(fsa.allocateFlight(fe, plane));</span>
+<span class="fc" id="L200">	}</span>
+	
+	//测试分配后导致与其他计划项产生资源独占冲突
+	@Test(expected = ResourceOrLocationConflictException.class)
+	public void testAllocateFlightException() throws ResourceOrLocationConflictException {
+<span class="fc" id="L205">		FlightScheduleApp fsa = new FlightScheduleApp();</span>
+<span class="fc" id="L206">		Plane plane = new Plane(&quot;B0741&quot;, &quot;A380&quot;, 468, 1.1);</span>
+<span class="fc" id="L207">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L208">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L209">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L210">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L211">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L212">		fsa.addPlane(plane);</span>
+		//计划项A使用资源
+<span class="fc" id="L214">		fsa.addFlight(name,  departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L215">		PlanningEntry&lt;Plane&gt; fe = fsa.findFlightEntry(name, departureLoc.getName(), arrivalLoc.getName(), new Timeslot(start, end));</span>
+<span class="fc" id="L216">		fsa.allocateFlight(fe, plane);</span>
+		//计划项B使用资源
+<span class="fc" id="L218">		fsa.addFlight(&quot;B&quot;, departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L219">		fe = fsa.findFlightEntry(&quot;B&quot;, departureLoc.getName(), arrivalLoc.getName(), new Timeslot(start, end));</span>
+<span class="nc" id="L220">		fsa.allocateFlight(fe, plane);</span>
+<span class="nc" id="L221">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

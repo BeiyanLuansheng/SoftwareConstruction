@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>CheckFlightEntry.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.conflict</a> &gt; <span class="el_source">CheckFlightEntry.java</span></div><h1>CheckFlightEntry.java</h1><pre class="source lang-java linenums">package common.conflict;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import common.plan.PlanningEntry;
+import common.time.Timeslot;
+import flight.FlightEntry;
+
+/**
+ * 检查航班之间是否有资源独占冲突、寻找前序计划项
+ * 
+ * @param &lt;R&gt; 计划项资源类型
+ */
+<span class="pc bpc" id="L15" title="1 of 2 branches missed.">public class CheckFlightEntry&lt;R&gt; {</span>
+
+	/**
+	 * 检查航班之间是否存在资源独占冲突
+	 * 
+	 * @param entries 航班列表
+	 * @return true 存在冲突 false 不存在冲突
+	 */
+	public boolean checkResourceExclusiveConflict(List&lt;PlanningEntry&lt;R&gt;&gt; entries) {
+<span class="fc bfc" id="L24" title="All 4 branches covered.">		if (entries == null || entries.size() &lt; 2)</span>
+<span class="fc" id="L25">			return false;</span>
+<span class="fc" id="L26">		List&lt;FlightEntry&lt;R&gt;&gt; flightEntries = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">		for (PlanningEntry&lt;R&gt; pe : entries)</span>
+<span class="fc" id="L28">			flightEntries.add((FlightEntry&lt;R&gt;) pe);</span>
+
+<span class="fc" id="L30">		List&lt;R&gt; planes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L31">		List&lt;Timeslot&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">		for (FlightEntry&lt;R&gt; fe : flightEntries) {</span>
+<span class="fc" id="L33">			R plane = fe.getResource();</span>
+<span class="fc" id="L34">			Timeslot time = fe.getTimeslot();</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">			if (planes.contains(plane))</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">				for (R p : planes)</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">					if (p.equals(plane)) {</span>
+<span class="fc" id="L38">						int index = planes.indexOf(p);</span>
+<span class="fc" id="L39">						Timeslot t = times.get(index);</span>
+<span class="pc bpc" id="L40" title="1 of 4 branches missed.">						if (!(t.isBefore(time) || time.isBefore(t)))</span>
+<span class="fc" id="L41">							return true;</span>
+					}
+<span class="fc" id="L43">			planes.add(plane);</span>
+<span class="fc" id="L44">			times.add(time);</span>
+		}
+<span class="fc" id="L46">		return false;</span>
+	}
+
+	/**
+	 * 在所有计划项中找到e计划项前一个同样使用资源r的计划项
+	 * 
+	 * @param r       使用的资源，非空
+	 * @param e       指定的使用资源r的计划项，非空
+	 * @param entries 计划项列表，至少有一个计划项
+	 * @return 计划项 使用资源 r，执行时间在e之前，且在 e和 其之间不存在使用资源 r的其他计划项 null，不存在这样的计划项
+	 */
+	public PlanningEntry&lt;R&gt; findPreEntryPerResource(R r, PlanningEntry&lt;R&gt; e, List&lt;PlanningEntry&lt;R&gt;&gt; entries) {
+<span class="pc bpc" id="L58" title="4 of 8 branches missed.">		if (r == null || e == null || entries == null || entries.size() &lt; 1</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">				|| !((FlightEntry&lt;R&gt;) e).getResource().equals(r))</span>
+<span class="nc" id="L60">			throw new IllegalArgumentException();// 不满足前置条件，抛出异常</span>
+<span class="fc" id="L61">		List&lt;FlightEntry&lt;R&gt;&gt; flightEntries = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		for (PlanningEntry&lt;R&gt; pe : entries)</span>
+<span class="fc" id="L63">			flightEntries.add((FlightEntry&lt;R&gt;) pe);</span>
+
+<span class="fc" id="L65">		FlightEntry&lt;R&gt; f = null;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">		for (FlightEntry&lt;R&gt; fe : flightEntries) {</span>
+<span class="pc bpc" id="L67" title="1 of 4 branches missed.">			if (fe.getResource().equals(r) &amp;&amp; fe.getTimeslot().isBefore(((FlightEntry&lt;R&gt;) e).getTimeslot())) {</span>
+<span class="pc bpc" id="L68" title="3 of 4 branches missed.">				if (f == null || fe.getTimeslot().isAfter(f.getTimeslot()))</span>
+<span class="fc" id="L69">					f = fe;</span>
+			}
+		}
+<span class="fc bfc" id="L72" title="All 2 branches covered.">		if (f != null) {</span>
+<span class="pc bpc" id="L73" title="2 of 4 branches missed.">			assert f.getTimeslot().isBefore(((FlightEntry&lt;R&gt;) e).getTimeslot()); // f要在e之前</span>
+<span class="pc bpc" id="L74" title="2 of 4 branches missed.">			assert f.getResource().equals(r); // f使用的资源是r</span>
+		}
+<span class="fc" id="L76">		return f;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

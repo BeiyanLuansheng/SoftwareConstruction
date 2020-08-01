@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>TimeslotTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">common.time</a> &gt; <span class="el_source">TimeslotTest.java</span></div><h1>TimeslotTest.java</h1><pre class="source lang-java linenums">package common.time;
+
+import static org.junit.Assert.*;
+
+import java.time.LocalDateTime;
+
+import org.junit.Test;
+
+<span class="fc" id="L9">public class TimeslotTest {</span>
+
+	// Test strategy
+	// 测试getStartTime()和getEndTime()
+	// 测试得到的时间是否与期望的时间相同
+	// 测试getStartTimeString()和getEndTimeString()
+	// 测试得到的时间字符串是否与期望的时间相同
+	// 测试isBefore()
+	// 两个时间段相交，两个时间段不相交
+	// 测试isAfter()
+	// 两个时间段相交，两个时间段不相交
+	// 测试equals()
+	// 两个时间段的表示的时间相等，表示的时间不等
+
+	@Test
+	public void testGetStartTimeAndGetEndtime() {
+<span class="fc" id="L25">		LocalDateTime start = LocalDateTime.of(2020, 04, 27, 14, 00);</span>
+<span class="fc" id="L26">		LocalDateTime end = LocalDateTime.of(2020, 04, 27, 16, 00);</span>
+<span class="fc" id="L27">		Timeslot time = new Timeslot(&quot;2020-04-27 14:00&quot;, &quot;2020-04-27 16:00&quot;);</span>
+<span class="fc" id="L28">		assertEquals(start, time.getStartTime());</span>
+<span class="fc" id="L29">		assertEquals(end, time.getEndTime());</span>
+<span class="fc" id="L30">	}</span>
+	
+	@Test
+	public void testGetStartTimeStringAndGetEndtimeString() {
+<span class="fc" id="L34">		String start = &quot;2020-04-27 14:00&quot;;</span>
+<span class="fc" id="L35">		String end = &quot;2020-04-27 16:00&quot;;</span>
+<span class="fc" id="L36">		Timeslot time = new Timeslot(start, end);</span>
+<span class="fc" id="L37">		assertEquals(start, time.getStartTimeString());</span>
+<span class="fc" id="L38">		assertEquals(end, time.getEndTimeString());</span>
+<span class="fc" id="L39">	}</span>
+
+	@Test
+	public void testIsBefore() {
+<span class="fc" id="L43">		Timeslot time1 = new Timeslot(&quot;2020-04-27 14:00&quot;, &quot;2020-04-27 16:00&quot;);</span>
+		//两个时间段相交
+<span class="fc" id="L45">		Timeslot time2 = new Timeslot(&quot;2020-04-27 15:00&quot;, &quot;2020-04-27 17:00&quot;);</span>
+<span class="fc" id="L46">		assertFalse(time1.isBefore(time2));</span>
+<span class="fc" id="L47">		assertFalse(time2.isBefore(time1));</span>
+		//两个时间段不相交
+<span class="fc" id="L49">		Timeslot time3 = new Timeslot(&quot;2020-04-27 16:00&quot;, &quot;2020-04-27 17:00&quot;);</span>
+<span class="fc" id="L50">		assertTrue(time1.isBefore(time3));</span>
+<span class="fc" id="L51">		assertFalse(time3.isBefore(time1));</span>
+<span class="fc" id="L52">	}</span>
+
+	@Test
+	public void testIsAfter() {
+<span class="fc" id="L56">		Timeslot time1 = new Timeslot(&quot;2020-04-27 14:00&quot;, &quot;2020-04-27 16:00&quot;);</span>
+		//两个时间段相交
+<span class="fc" id="L58">		Timeslot time2 = new Timeslot(&quot;2020-04-27 15:00&quot;, &quot;2020-04-27 17:00&quot;);</span>
+<span class="fc" id="L59">		assertFalse(time1.isAfter(time2));</span>
+<span class="fc" id="L60">		assertFalse(time2.isAfter(time1));</span>
+		//开始时间不等
+<span class="fc" id="L62">		Timeslot time3 = new Timeslot(&quot;2020-04-27 13:00&quot;, &quot;2020-04-27 14:00&quot;);</span>
+<span class="fc" id="L63">		assertTrue(time1.isAfter(time3));</span>
+<span class="fc" id="L64">		assertFalse(time3.isAfter(time1));</span>
+<span class="fc" id="L65">	}</span>
+
+	@Test
+	public void testEquals() {
+<span class="fc" id="L69">		Timeslot time1 = new Timeslot(&quot;2020-04-27 14:00&quot;, &quot;2020-04-27 15:00&quot;);</span>
+		//时间相等
+<span class="fc" id="L71">		Timeslot time2 = new Timeslot(&quot;2020-04-27 14:00&quot;, &quot;2020-04-27 15:00&quot;);</span>
+<span class="fc" id="L72">		assertTrue(time1.equals(time2));</span>
+		//时间不等
+<span class="fc" id="L74">		Timeslot time3 = new Timeslot(&quot;2020-04-27 13:00&quot;, &quot;2020-04-27 15:00&quot;);</span>
+<span class="fc" id="L75">		assertFalse(time1.equals(time3));</span>
+<span class="fc" id="L76">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

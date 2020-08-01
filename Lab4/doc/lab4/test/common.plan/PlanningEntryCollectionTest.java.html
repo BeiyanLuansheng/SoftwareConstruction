@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>PlanningEntryCollectionTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">common.plan</a> &gt; <span class="el_source">PlanningEntryCollectionTest.java</span></div><h1>PlanningEntryCollectionTest.java</h1><pre class="source lang-java linenums">package common.plan;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
+import activity.Material;
+
+<span class="fc" id="L12">public class PlanningEntryCollectionTest {</span>
+	// Test strategy
+	// 测试AddEntries()
+	// 添加的计划项未null，计划项不为null
+	// 测试getEntries()
+	// 当没有计划项时，当有计划项时
+	// 测试sort()
+	// 测试能够按照时间的先后顺序给计划项排序
+
+	@Test
+	public void testAddEntries() {
+<span class="fc" id="L23">		PlanningEntryCollection&lt;Material&gt; pec = new PlanningEntryCollection&lt;&gt;();</span>
+<span class="fc" id="L24">		assertFalse(pec.addEntries(null));</span>
+<span class="fc" id="L25">		assertTrue(pec.addEntries(PlanningEntry.activityEntry(&quot;A&quot;, &quot;2020-05-09 14:00&quot;, &quot;2020-05-09 15:00&quot;)));</span>
+<span class="fc" id="L26">	}</span>
+
+	@Test
+	public void testGetEntries() {
+<span class="fc" id="L30">		PlanningEntryCollection&lt;Material&gt; pec = new PlanningEntryCollection&lt;&gt;();</span>
+<span class="fc" id="L31">		List&lt;PlanningEntry&lt;Material&gt;&gt; entries = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L32">		assertEquals(entries, pec.getEntries());</span>
+<span class="fc" id="L33">		PlanningEntry&lt;Material&gt; pe = PlanningEntry.activityEntry(&quot;A&quot;, &quot;2020-05-09 14:00&quot;, &quot;2020-05-09 15:00&quot;);</span>
+<span class="fc" id="L34">		pec.addEntries(pe);</span>
+<span class="fc" id="L35">		entries.add(pe);</span>
+<span class="fc" id="L36">		assertEquals(entries, pec.getEntries());</span>
+<span class="fc" id="L37">	}</span>
+
+	@Test
+	public void testSort() {
+<span class="fc" id="L41">		PlanningEntryCollection&lt;Material&gt; pec = new PlanningEntryCollection&lt;&gt;();</span>
+<span class="fc" id="L42">		List&lt;PlanningEntry&lt;Material&gt;&gt; entries = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L43">		PlanningEntry&lt;Material&gt; pe1 = PlanningEntry.activityEntry(&quot;A&quot;, &quot;2020-05-09 14:00&quot;, &quot;2020-05-09 15:00&quot;);</span>
+<span class="fc" id="L44">		PlanningEntry&lt;Material&gt; pe2 = PlanningEntry.activityEntry(&quot;A&quot;, &quot;2020-05-09 15:00&quot;, &quot;2020-05-09 16:00&quot;);</span>
+<span class="fc" id="L45">		entries.add(pe1);</span>
+<span class="fc" id="L46">		entries.add(pe2);</span>
+<span class="fc" id="L47">		pec.addEntries(pe2);</span>
+<span class="fc" id="L48">		pec.addEntries(pe1);</span>
+<span class="fc" id="L49">		pec.sort();</span>
+<span class="fc" id="L50">		assertEquals(entries, pec.getEntries());</span>
+<span class="fc" id="L51">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

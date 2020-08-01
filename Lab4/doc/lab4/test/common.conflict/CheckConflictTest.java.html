@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>CheckConflictTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">common.conflict</a> &gt; <span class="el_source">CheckConflictTest.java</span></div><h1>CheckConflictTest.java</h1><pre class="source lang-java linenums">package common.conflict;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
+import activity.ActivityEntry;
+import activity.Material;
+import common.location.Location;
+import common.plan.PlanningEntry;
+import flight.FlightEntry;
+import flight.Plane;
+import train.Carriage;
+import train.TrainEntry;
+
+<span class="fc" id="L19">public class CheckConflictTest {</span>
+
+	// Test strategy
+	// 测试checkLocationConflict()
+	// 计划项列表中没有计划项，计划项列表只有一个计划项，计划项列表中至少有两个计划项
+	// 计划项中不存在冲突，计划项中存在冲突
+	// 测试checkResourceExclusiveConflict()
+	// 按计划项类型分：计划项为航班计划项，计划项为高铁车次计划项
+	// 按计划项数量分：计划项列表中没有计划项，计划项列表只有一个计划项，计划项列表中至少有两个计划项
+	// 按计划项是否有冲突分：计划项中不存在冲突，计划项中存在冲突
+	// 测试findPreEntryPerResource()
+	// 按计划项类型分：计划项为航班计划项，计划项为高铁车次计划项
+	// 按是否存在满足条件的计划项分：存在满足条件的计划项，不存在满足条件的计划项
+
+	//tests for checkLocationConflict()
+	@Test
+	public void testCheckLocationConflict() {
+<span class="fc" id="L36">		PlanningEntryAPIs&lt;Material&gt; cc = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L37">		CheckActivityEntryPlanA&lt;Material&gt; caepa = new CheckActivityEntryPlanA&lt;&gt;();</span>
+<span class="fc" id="L38">		List&lt;PlanningEntry&lt;Material&gt;&gt; activityEntries = new ArrayList&lt;&gt;();</span>
+		//空计划项列表
+<span class="fc" id="L40">		assertFalse(cc.checkLocationConflict(caepa, null));</span>
+		//没有计划项但不空的列表
+<span class="fc" id="L42">		assertFalse(cc.checkLocationConflict(caepa, activityEntries));</span>
+		//只有一个计划项的列表
+<span class="fc" id="L44">		PlanningEntry&lt;Material&gt; pe = PlanningEntry.activityEntry(&quot;A1&quot;, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L45">		Location location = new Location(&quot;place&quot;, false);</span>
+<span class="fc" id="L46">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L47">		activityEntries.add(pe);</span>
+<span class="fc" id="L48">		assertFalse(cc.checkLocationConflict(caepa, activityEntries));</span>
+		//不存在冲突的至少两个计划项的列表
+<span class="fc" id="L50">		pe = PlanningEntry.activityEntry(&quot;B2&quot;, &quot;2020-04-26 12:00&quot;, &quot;2020-04-26 13:00&quot;);</span>
+<span class="fc" id="L51">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L52">		activityEntries.add(pe);</span>
+<span class="fc" id="L53">		assertFalse(cc.checkLocationConflict(caepa, activityEntries));</span>
+		//存在冲突的至少两个计划项的列表
+<span class="fc" id="L55">		pe = PlanningEntry.activityEntry(&quot;C3&quot;, &quot;2020-04-26 11:00&quot;, &quot;2020-04-26 13:00&quot;);</span>
+<span class="fc" id="L56">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L57">		activityEntries.add(pe);</span>
+<span class="fc" id="L58">		assertTrue(cc.checkLocationConflict(caepa, activityEntries));</span>
+<span class="fc" id="L59">	}</span>
+	
+<span class="fc" id="L61">	final Location loc1 = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L62">	final Location loc2 = new Location(&quot;Tianjin&quot;, true);</span>
+<span class="fc" id="L63">	final String t1 = &quot;2020-04-26 10:00&quot;;</span>
+<span class="fc" id="L64">	final String t2 = &quot;2020-04-26 11:00&quot;;</span>
+<span class="fc" id="L65">	final String t3 = &quot;2020-04-26 12:00&quot;;</span>
+<span class="fc" id="L66">	final Carriage c1 = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L67">	final Carriage c2 = new Carriage(2, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L68">	final Carriage c3 = new Carriage(3, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L69">	final Carriage c4 = new Carriage(4, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L70">	final Carriage c5 = new Carriage(5, &quot;ErDengZuo&quot;, 100, 2020);</span>
+
+	//tests for checkResourceExclusiveConflict()
+	//测试航班计划项
+	@Test
+	public void testFlightCheckResourceExclusConflict() {
+<span class="fc" id="L76">		PlanningEntryAPIs&lt;Plane&gt; cc = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L77">		List&lt;PlanningEntry&lt;Plane&gt;&gt; flightEntries = new ArrayList&lt;&gt;();</span>
+		//空计划项列表
+<span class="fc" id="L79">		assertFalse(cc.checkResourceExclusiveConflict(null));</span>
+		//没有计划项但不空的列表
+<span class="fc" id="L81">		assertFalse(cc.checkResourceExclusiveConflict(flightEntries));</span>
+		//只有一个计划项的列表
+<span class="fc" id="L83">		Plane plane = new Plane(&quot;B6967&quot;, &quot;A370&quot;, 332, 23.7);</span>
+<span class="fc" id="L84">		PlanningEntry&lt;Plane&gt; pe = PlanningEntry.flightEntry(&quot;A1&quot;, loc1, loc2, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L85">		((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane);</span>
+<span class="fc" id="L86">		flightEntries.add(pe);</span>
+<span class="fc" id="L87">		assertFalse(cc.checkResourceExclusiveConflict(flightEntries));</span>
+		//不存在冲突的至少两个计划项的列表
+<span class="fc" id="L89">		pe = PlanningEntry.flightEntry(&quot;B2&quot;, loc1, loc2, &quot;2020-04-27 10:00&quot;, &quot;2020-04-27 12:00&quot;);</span>
+<span class="fc" id="L90">		((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane);</span>
+<span class="fc" id="L91">		flightEntries.add(pe);</span>
+<span class="fc" id="L92">		assertFalse(cc.checkResourceExclusiveConflict(flightEntries));</span>
+		//存在冲突的至少两个计划项的列表
+<span class="fc" id="L94">		pe = PlanningEntry.flightEntry(&quot;C3&quot;, loc1, loc2, &quot;2020-04-26 11:00&quot;, &quot;2020-04-27 13:00&quot;);</span>
+<span class="fc" id="L95">		((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane);</span>
+<span class="fc" id="L96">		flightEntries.add(pe);</span>
+<span class="fc" id="L97">		assertTrue(cc.checkResourceExclusiveConflict(flightEntries));</span>
+<span class="fc" id="L98">	}</span>
+
+	//测试高铁车次计划项
+	@Test
+	public void testTrainCheckResourceExclusConflict() {
+<span class="fc" id="L103">		PlanningEntryAPIs&lt;Carriage&gt; cc = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L104">		List&lt;PlanningEntry&lt;Carriage&gt;&gt; trainEntries = new ArrayList&lt;&gt;();</span>
+		//空计划项列表
+<span class="fc" id="L106">		assertFalse(cc.checkResourceExclusiveConflict(null));</span>
+		//没有计划项但不空的列表
+<span class="fc" id="L108">		assertFalse(cc.checkResourceExclusiveConflict(trainEntries));</span>
+		//只有一个计划项的列表
+<span class="fc" id="L110">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L111">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L112">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L113">		locations.add(loc1);</span>
+<span class="fc" id="L114">		locations.add(loc2);</span>
+<span class="fc" id="L115">		times.add(t1);</span>
+<span class="fc" id="L116">		times.add(t2);</span>
+<span class="fc" id="L117">		train.add(c1);</span>
+<span class="fc" id="L118">		train.add(c2);</span>
+<span class="fc" id="L119">		PlanningEntry&lt;Carriage&gt; pe = PlanningEntry.trainEntry(&quot;A1&quot;, locations, times);</span>
+<span class="fc" id="L120">		((TrainEntry&lt;Carriage&gt;) pe).allocateTrain(train);</span>
+<span class="fc" id="L121">		trainEntries.add(pe);</span>
+<span class="fc" id="L122">		assertFalse(cc.checkResourceExclusiveConflict(trainEntries));</span>
+		//不存在冲突的至少两个计划项的列表
+<span class="fc" id="L124">		locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L125">		times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L126">		train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L127">		locations.add(loc1);</span>
+<span class="fc" id="L128">		locations.add(loc2);</span>
+<span class="fc" id="L129">		times.add(t1);</span>
+<span class="fc" id="L130">		times.add(t2);</span>
+<span class="fc" id="L131">		train.add(c3);</span>
+<span class="fc" id="L132">		train.add(c4);</span>
+<span class="fc" id="L133">		pe = PlanningEntry.trainEntry(&quot;B2&quot;, locations, times);</span>
+<span class="fc" id="L134">		((TrainEntry&lt;Carriage&gt;) pe).allocateTrain(train);</span>
+<span class="fc" id="L135">		trainEntries.add(pe);</span>
+<span class="fc" id="L136">		assertFalse(cc.checkResourceExclusiveConflict(trainEntries));</span>
+		//存在冲突的至少两个计划项的列表
+<span class="fc" id="L138">		locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L139">		times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L140">		train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L141">		locations.add(loc1);</span>
+<span class="fc" id="L142">		locations.add(loc2);</span>
+<span class="fc" id="L143">		times.add(t1);</span>
+<span class="fc" id="L144">		times.add(t2);</span>
+<span class="fc" id="L145">		train.add(c2);</span>
+<span class="fc" id="L146">		train.add(c4);</span>
+<span class="fc" id="L147">		train.add(c5);</span>
+<span class="fc" id="L148">		pe = PlanningEntry.trainEntry(&quot;C3&quot;, locations, times);</span>
+<span class="fc" id="L149">		((TrainEntry&lt;Carriage&gt;) pe).allocateTrain(train);</span>
+<span class="fc" id="L150">		trainEntries.add(pe);</span>
+<span class="fc" id="L151">		assertTrue(cc.checkResourceExclusiveConflict(trainEntries));</span>
+<span class="fc" id="L152">	}</span>
+
+	//tests for findPreEntryPerResource()
+	//测试航班计划项
+	@Test
+	public void testFlightFindPreEntryPerResource() {
+<span class="fc" id="L158">		PlanningEntryAPIs&lt;Plane&gt; cc = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L159">		List&lt;PlanningEntry&lt;Plane&gt;&gt; flightEntries = new ArrayList&lt;&gt;();</span>
+		//不存在满足条件的计划项
+<span class="fc" id="L161">		Plane plane = new Plane(&quot;B6967&quot;, &quot;A370&quot;, 332, 23.7);</span>
+<span class="fc" id="L162">		PlanningEntry&lt;Plane&gt; pe1 = PlanningEntry.flightEntry(&quot;A1&quot;, loc1, loc2, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L163">		((FlightEntry&lt;Plane&gt;) pe1).allocatePlane(plane);</span>
+<span class="fc" id="L164">		flightEntries.add(pe1);</span>
+<span class="fc" id="L165">		assertEquals(null, cc.findPreEntryPerResource(plane, pe1, flightEntries));</span>
+		//存在满足条件的计划项
+<span class="fc" id="L167">		PlanningEntry&lt;Plane&gt; pe2 = PlanningEntry.flightEntry(&quot;B2&quot;, loc1, loc2, &quot;2020-04-27 10:00&quot;, &quot;2020-04-27 12:00&quot;);</span>
+<span class="fc" id="L168">		((FlightEntry&lt;Plane&gt;) pe2).allocatePlane(plane);</span>
+<span class="fc" id="L169">		flightEntries.add(pe2);</span>
+<span class="fc" id="L170">		assertEquals(pe1, cc.findPreEntryPerResource(plane, pe2, flightEntries));</span>
+<span class="fc" id="L171">	}</span>
+
+	//测试高铁车次计划项
+	@Test
+	public void testTrainFindPreEntryPerResource() {
+<span class="fc" id="L176">		PlanningEntryAPIs&lt;Carriage&gt; cc = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L177">		List&lt;PlanningEntry&lt;Carriage&gt;&gt; trainEntries = new ArrayList&lt;&gt;();</span>
+		//不存在满足条件的计划项
+<span class="fc" id="L179">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L180">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L181">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L182">		locations.add(loc1);</span>
+<span class="fc" id="L183">		locations.add(loc2);</span>
+<span class="fc" id="L184">		times.add(t1);</span>
+<span class="fc" id="L185">		times.add(t2);</span>
+<span class="fc" id="L186">		train.add(c1);</span>
+<span class="fc" id="L187">		train.add(c2);</span>
+<span class="fc" id="L188">		PlanningEntry&lt;Carriage&gt; pe1 = PlanningEntry.trainEntry(&quot;A1&quot;, locations, times);</span>
+<span class="fc" id="L189">		((TrainEntry&lt;Carriage&gt;) pe1).allocateTrain(train);</span>
+<span class="fc" id="L190">		trainEntries.add(pe1);</span>
+<span class="fc" id="L191">		assertEquals(null, cc.findPreEntryPerResource(c2, pe1, trainEntries));</span>
+		//存在满足条件的计划项
+<span class="fc" id="L193">		locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L194">		times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L195">		train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L196">		locations.add(loc1);</span>
+<span class="fc" id="L197">		locations.add(loc2);</span>
+<span class="fc" id="L198">		times.add(t2);</span>
+<span class="fc" id="L199">		times.add(t3);</span>
+<span class="fc" id="L200">		train.add(c2);</span>
+<span class="fc" id="L201">		train.add(c4);</span>
+<span class="fc" id="L202">		train.add(c5);</span>
+<span class="fc" id="L203">		PlanningEntry&lt;Carriage&gt; pe2 = PlanningEntry.trainEntry(&quot;B2&quot;, locations, times);</span>
+<span class="fc" id="L204">		((TrainEntry&lt;Carriage&gt;) pe2).allocateTrain(train);</span>
+<span class="fc" id="L205">		trainEntries.add(pe2);</span>
+<span class="fc" id="L206">		assertEquals(pe1, cc.findPreEntryPerResource(c2, pe2, trainEntries));</span>
+<span class="fc" id="L207">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

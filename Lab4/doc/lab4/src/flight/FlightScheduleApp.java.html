@@ -1,0 +1,1045 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>FlightScheduleApp.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">flight</a> &gt; <span class="el_source">FlightScheduleApp.java</span></div><h1>FlightScheduleApp.java</h1><pre class="source lang-java linenums">package flight;
+
+import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.logging.*;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+import common.conflict.PlanningEntryAPIs;
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.time.Timeslot;
+
+import exceptions.*;
+
+/**
+ * 航班管理应用
+ */
+public class FlightScheduleApp {
+<span class="fc" id="L42">	private final JFrame frame = new JFrame();</span>
+<span class="fc" id="L43">	private final JPanel buttonPanel = new JPanel();</span>
+<span class="fc" id="L44">	private final Set&lt;Plane&gt; planes = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L45">	private final Set&lt;Location&gt; locations = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L46">	private final Board&lt;Plane&gt; board = new Board&lt;&gt;();</span>
+<span class="fc" id="L47">	private final PlanningEntryAPIs&lt;Plane&gt; checkConf = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L48">	private final Logger log = Logger.getLogger(FlightScheduleApp.class.getName());</span>
+
+<span class="fc" id="L50">	public FlightScheduleApp() {</span>
+		try {
+<span class="fc" id="L52">			new FileWriter(&quot;src/log/flightlog.log&quot;).close();</span>
+<span class="fc" id="L53">			Locale.setDefault(new Locale(&quot;en&quot;, &quot;EN&quot;));</span>
+<span class="fc" id="L54">			log.setLevel(Level.INFO);</span>
+<span class="fc" id="L55">			FileHandler fh = new FileHandler(&quot;src/log/flightlog.log&quot;, true);</span>
+<span class="fc" id="L56">			fh.setFormatter(new SimpleFormatter());</span>
+<span class="fc" id="L57">			log.addHandler(fh);</span>
+<span class="pc" id="L58">		} catch (Exception e) {</span>
+<span class="nc" id="L59">			e.printStackTrace();</span>
+		}
+<span class="fc" id="L61">	}</span>
+
+	/**
+	 * 操作面板
+	 */
+	public void run() {
+
+<span class="nc" id="L68">		buttonPanel.setLayout(new GridLayout(8, 2));</span>
+
+<span class="nc" id="L70">		JButton addPlane = new JButton(&quot;Add Plane&quot;);</span>
+<span class="nc" id="L71">		buttonPanel.add(addPlane);</span>
+<span class="nc" id="L72">		addPlane.addActionListener(event -&gt; addPlane());</span>
+
+<span class="nc" id="L74">		JButton removePlane = new JButton(&quot;Remove Plane&quot;);</span>
+<span class="nc" id="L75">		buttonPanel.add(removePlane);</span>
+<span class="nc" id="L76">		removePlane.addActionListener(event -&gt; removePlane());</span>
+
+<span class="nc" id="L78">		JButton addLocation = new JButton(&quot;Add Location&quot;);</span>
+<span class="nc" id="L79">		buttonPanel.add(addLocation);</span>
+<span class="nc" id="L80">		addLocation.addActionListener(event -&gt; addLocation());</span>
+
+<span class="nc" id="L82">		JButton removeLocation = new JButton(&quot;Remove Location&quot;);</span>
+<span class="nc" id="L83">		buttonPanel.add(removeLocation);</span>
+<span class="nc" id="L84">		removeLocation.addActionListener(event -&gt; removeLocation());</span>
+
+<span class="nc" id="L86">		JButton addFlight = new JButton(&quot;Add FlightEntry&quot;);</span>
+<span class="nc" id="L87">		buttonPanel.add(addFlight);</span>
+<span class="nc" id="L88">		addFlight.addActionListener(event -&gt; addFlight());</span>
+
+<span class="nc" id="L90">		JButton cancelFlight = new JButton(&quot;Cancel FlightEntry&quot;);</span>
+<span class="nc" id="L91">		buttonPanel.add(cancelFlight);</span>
+<span class="nc" id="L92">		cancelFlight.addActionListener(event -&gt; cancelFlight());</span>
+
+<span class="nc" id="L94">		JButton allocateFlight = new JButton(&quot;Allocate FlightEntry&quot;);</span>
+<span class="nc" id="L95">		buttonPanel.add(allocateFlight);</span>
+<span class="nc" id="L96">		allocateFlight.addActionListener(event -&gt; allocateFlight());</span>
+
+<span class="nc" id="L98">		JButton runFlight = new JButton(&quot;Run FlightEnrty&quot;);</span>
+<span class="nc" id="L99">		buttonPanel.add(runFlight);</span>
+<span class="nc" id="L100">		runFlight.addActionListener(event -&gt; runFlight());</span>
+
+<span class="nc" id="L102">		JButton endFlight = new JButton(&quot;End FlightEntry&quot;);</span>
+<span class="nc" id="L103">		buttonPanel.add(endFlight);</span>
+<span class="nc" id="L104">		endFlight.addActionListener(event -&gt; endFlight());</span>
+
+<span class="nc" id="L106">		JButton getState = new JButton(&quot;Get Entry State&quot;);</span>
+<span class="nc" id="L107">		buttonPanel.add(getState);</span>
+<span class="nc" id="L108">		getState.addActionListener(event -&gt; getState());</span>
+
+<span class="nc" id="L110">		JButton checkConflict = new JButton(&quot;Check Resource Conflict&quot;);</span>
+<span class="nc" id="L111">		buttonPanel.add(checkConflict);</span>
+<span class="nc" id="L112">		checkConflict.addActionListener(event -&gt; checkConflict());</span>
+
+<span class="nc" id="L114">		JButton findEntryUseResource = new JButton(&quot;Find All Entry Use Resource&quot;);</span>
+<span class="nc" id="L115">		buttonPanel.add(findEntryUseResource);</span>
+<span class="nc" id="L116">		findEntryUseResource.addActionListener(event -&gt; findAllEntryUseResource());</span>
+
+<span class="nc" id="L118">		JButton findPreEntryUseResource = new JButton(&quot;Find PreEntry Use Resource&quot;);</span>
+<span class="nc" id="L119">		buttonPanel.add(findPreEntryUseResource);</span>
+<span class="nc" id="L120">		findPreEntryUseResource.addActionListener(event -&gt; findPreEntryUseResource());</span>
+
+<span class="nc" id="L122">		JButton findLocation = new JButton(&quot;Find Entry At Location&quot;);</span>
+<span class="nc" id="L123">		buttonPanel.add(findLocation);</span>
+<span class="nc" id="L124">		findLocation.addActionListener(event -&gt; findLocation());</span>
+
+<span class="nc" id="L126">		JButton readFile = new JButton(&quot;Read entry from file&quot;);</span>
+<span class="nc" id="L127">		buttonPanel.add(readFile);</span>
+<span class="nc" id="L128">		readFile.addActionListener(event -&gt; readFileCreatFlightSchedule());</span>
+
+<span class="nc" id="L130">		JButton readLog = new JButton(&quot;Read log file&quot;);</span>
+<span class="nc" id="L131">		buttonPanel.add(readLog);</span>
+<span class="nc" id="L132">		readLog.addActionListener(event -&gt; readLog());</span>
+
+<span class="nc" id="L134">		frame.add(buttonPanel);</span>
+<span class="nc" id="L135">		frame.pack();</span>
+<span class="nc" id="L136">		frame.setVisible(true);</span>
+<span class="nc" id="L137">		frame.addWindowListener(new WindowAdapter() {</span>
+			@Override
+			public void windowClosing(WindowEvent e) {
+<span class="nc" id="L140">				System.exit(0);</span>
+<span class="nc" id="L141">			}</span>
+		});
+<span class="nc" id="L143">	}</span>
+
+	/**
+	 * 添加可用飞机资源
+	 */
+	public void addPlane() {
+<span class="nc" id="L149">		String id = JOptionPane.showInputDialog(&quot;飞机的编号：&quot;);</span>
+<span class="nc" id="L150">		String type = JOptionPane.showInputDialog(&quot;飞机的型号：&quot;);</span>
+<span class="nc" id="L151">		String seats = JOptionPane.showInputDialog(&quot;飞机的座位数：&quot;);</span>
+<span class="nc" id="L152">		String age = JOptionPane.showInputDialog(&quot;飞机的机龄：&quot;);</span>
+<span class="nc" id="L153">		Plane plane = new Plane(id, type, Integer.parseInt(seats), Double.parseDouble(age));</span>
+<span class="nc" id="L154">		String planeInfo = &quot;Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,Age:&quot; + age;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (addPlane(plane)) {</span>
+<span class="nc" id="L156">			log.info(&quot;AddPlane;&quot; + planeInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L157">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L158">		} else {</span>
+<span class="nc" id="L159">			log.info(&quot;AddPlane;&quot; + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L160">			JOptionPane.showMessageDialog(null, &quot;此飞机已存在！&quot;);</span>
+		}
+<span class="nc" id="L162">	}</span>
+
+	/**
+	 * 添加可用飞机资源的功能实现部分
+	 * 
+	 * @param plane 添加的飞机
+	 * @return true 添加成功;false 添加失败，飞机已存在
+	 */
+	public boolean addPlane(Plane plane) {
+<span class="fc bfc" id="L171" title="All 2 branches covered.">		if (planes.contains(plane))</span>
+<span class="fc" id="L172">			return false;</span>
+		else {
+<span class="fc" id="L174">			planes.add(plane);</span>
+<span class="fc" id="L175">			return true;</span>
+		}
+	}
+
+	/**
+	 * 删除不可用飞机资源
+	 */
+	public void removePlane() {
+<span class="nc" id="L183">		String id = JOptionPane.showInputDialog(&quot;飞机的编号：&quot;);</span>
+<span class="nc" id="L184">		String type = JOptionPane.showInputDialog(&quot;飞机的型号：&quot;);</span>
+<span class="nc" id="L185">		String seats = JOptionPane.showInputDialog(&quot;飞机的座位数：&quot;);</span>
+<span class="nc" id="L186">		String age = JOptionPane.showInputDialog(&quot;飞机的机龄：&quot;);</span>
+<span class="nc" id="L187">		Plane plane = new Plane(id, type, Integer.parseInt(seats), Double.parseDouble(age));</span>
+<span class="nc" id="L188">		String planeInfo = &quot;Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,Age:&quot; + age;</span>
+		try {
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			if (removePlane(plane)) {</span>
+<span class="nc" id="L191">				log.info(&quot;RemovePlane;&quot; + planeInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L192">				JOptionPane.showMessageDialog(null, &quot;删除成功！&quot;);</span>
+<span class="nc" id="L193">			} else {</span>
+<span class="nc" id="L194">				log.info(&quot;RemovePlane;&quot; + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L195">				JOptionPane.showMessageDialog(null, &quot;此飞机不存在！&quot;);</span>
+			}
+
+<span class="nc" id="L198">		} catch (EntryUseResourceOrLocationException e) {</span>
+<span class="nc" id="L199">			log.info(&quot;RemovePlane;&quot; + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新指定资源？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L201">				log.warning(</span>
+<span class="nc" id="L202">						&quot;RemovePlane;EntryUseResourceOrLocationException:FlightScheduleApp.removePlane(plane);reselect resource&quot;);</span>
+<span class="nc" id="L203">				removePlane();</span>
+<span class="nc" id="L204">			} else</span>
+<span class="nc" id="L205">				log.warning(&quot;RemovePlane;EntryUseResourceOrLocationException:FlightScheduleApp.removePlane(plane);end&quot;);</span>
+		}
+<span class="nc" id="L207">	}</span>
+
+	/**
+	 * 删除不可用飞机资源的功能实现部分
+	 * 
+	 * @param plane 待删除的资源
+	 * @return true 删除成功;false 不存在
+	 * @throws EntryUseResourceOrLocationException 资源被使用中
+	 */
+	public boolean removePlane(Plane plane) throws EntryUseResourceOrLocationException {
+<span class="fc bfc" id="L217" title="All 2 branches covered.">		if (planes.contains(plane)) {</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">			for (PlanningEntry&lt;Plane&gt; pe : board.getFlightEntries())</span>
+<span class="pc bpc" id="L219" title="2 of 4 branches missed.">				if (((FlightEntry&lt;Plane&gt;) pe).getResource().equals(plane) &amp;&amp; !pe.getState().equals(&quot;ENDED&quot;))</span>
+<span class="fc" id="L220">					throw new EntryUseResourceOrLocationException(&quot;计划项&quot; + pe.getName() + &quot;正在使用该资源，不能删除&quot;);</span>
+<span class="fc" id="L221">			planes.remove(plane);</span>
+<span class="fc" id="L222">			return true;</span>
+		} else
+<span class="fc" id="L224">			return false;</span>
+	}
+
+	/**
+	 * 添加可用位置
+	 */
+	public void addLocation() {
+<span class="nc" id="L231">		String name = JOptionPane.showInputDialog(&quot;机场名称：&quot;);</span>
+<span class="nc" id="L232">		Location loc = new Location(name, true);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if (addLocation(loc)) {</span>
+<span class="nc" id="L234">			log.info(&quot;AddLocation;Name:&quot; + name + &quot;;success&quot;);</span>
+<span class="nc" id="L235">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L236">		} else {</span>
+<span class="nc" id="L237">			log.info(&quot;AddLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc" id="L238">			JOptionPane.showMessageDialog(null, &quot;此机场已存在！&quot;);</span>
+		}
+<span class="nc" id="L240">	}</span>
+
+	/**
+	 * 添加可用位置的功能实现部分
+	 * 
+	 * @param loc 待添加的位置
+	 * @return true 添加成功;false 位置已存在
+	 */
+	public boolean addLocation(Location loc) {
+<span class="fc bfc" id="L249" title="All 2 branches covered.">		if (locations.contains(loc))</span>
+<span class="fc" id="L250">			return false;</span>
+		else {
+<span class="fc" id="L252">			locations.add(loc);</span>
+<span class="fc" id="L253">			return true;</span>
+		}
+	}
+
+	/**
+	 * 删除不可用的位置
+	 */
+	public void removeLocation() {
+<span class="nc" id="L261">		String name = JOptionPane.showInputDialog(&quot;机场名称：&quot;);</span>
+<span class="nc" id="L262">		Location loc = new Location(name, true);</span>
+		try {
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (removeLocation(loc)) {</span>
+<span class="nc" id="L265">				log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;success&quot;);</span>
+<span class="nc" id="L266">				JOptionPane.showMessageDialog(null, &quot;删除成功！&quot;);</span>
+<span class="nc" id="L267">			} else {</span>
+<span class="nc" id="L268">				log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc" id="L269">				JOptionPane.showMessageDialog(null, &quot;此机场不存在！&quot;);</span>
+			}
+<span class="nc" id="L271">		} catch (EntryUseResourceOrLocationException e) {</span>
+<span class="nc" id="L272">			log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新指定位置？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L274">				log.warning(</span>
+<span class="nc" id="L275">						&quot;RemoveLocation;EntryUseResourceOrLocationException:FlightScheduleApp.removeLocation(loc);reselect location&quot;);</span>
+<span class="nc" id="L276">				removeLocation();</span>
+<span class="nc" id="L277">			} else</span>
+<span class="nc" id="L278">				log.warning(</span>
+<span class="nc" id="L279">						&quot;RemoveLocation;EntryUseResourceOrLocationException:FlightScheduleApp.removeLocation(loc);end&quot;);</span>
+		}
+<span class="nc" id="L281">	}</span>
+
+	/**
+	 * 删除不可用的位置的功能实现部分
+	 * 
+	 * @param loc 待删除的位置
+	 * @return true 删除成功;false 不存在位置
+	 * @throws EntryUseResourceOrLocationException 有计划项在使用该位置
+	 */
+	public boolean removeLocation(Location loc) throws EntryUseResourceOrLocationException {
+<span class="fc bfc" id="L291" title="All 2 branches covered.">		if (locations.contains(loc)) {</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">			for (PlanningEntry&lt;Plane&gt; pe : board.getFlightEntries())</span>
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">				if ((((FlightEntry&lt;Plane&gt;) pe).getDeparture().equals(loc)</span>
+<span class="pc bpc" id="L294" title="3 of 4 branches missed.">						|| ((FlightEntry&lt;Plane&gt;) pe).getArrival().equals(loc)) &amp;&amp; !pe.getState().equals(&quot;ENDED&quot;))</span>
+<span class="fc" id="L295">					throw new EntryUseResourceOrLocationException(&quot;计划项&quot; + pe.getName() + &quot;正在使用该位置，不可删除&quot;);</span>
+<span class="fc" id="L296">			locations.remove(loc);</span>
+<span class="fc" id="L297">			return true;</span>
+		} else
+<span class="fc" id="L299">			return false;</span>
+	}
+
+	/**
+	 * 找到指定的航班计划项
+	 * 
+	 * @return 非空 相应的航班计划项 null 没有相应的航班计划项
+	 */
+	private PlanningEntry&lt;Plane&gt; findFlightEntry(StringBuilder flightInfo) {
+<span class="nc" id="L308">		String name = JOptionPane.showInputDialog(&quot;航班号：&quot;);</span>
+<span class="nc" id="L309">		String departure = JOptionPane.showInputDialog(&quot;起飞机场：&quot;);</span>
+<span class="nc" id="L310">		String arrival = JOptionPane.showInputDialog(&quot;降落机场：&quot;);</span>
+<span class="nc" id="L311">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc" id="L312">		String start = &quot;&quot;;</span>
+<span class="nc" id="L313">		String end = &quot;&quot;;</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">		while (!start.matches(regex))</span>
+<span class="nc" id="L315">			start = JOptionPane.showInputDialog(&quot;起飞时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">		while (!end.matches(regex))</span>
+<span class="nc" id="L317">			end = JOptionPane.showInputDialog(&quot;降落时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L318">		flightInfo.append(&quot;Entry:&quot; + name);</span>
+<span class="nc" id="L319">		flightInfo.append(&quot;,Departure&quot; + departure);</span>
+<span class="nc" id="L320">		flightInfo.append(&quot;,Arrival:&quot; + arrival);</span>
+<span class="nc" id="L321">		flightInfo.append(&quot;,StartTime:&quot; + start);</span>
+<span class="nc" id="L322">		flightInfo.append(&quot;,EndTime:&quot; + end);</span>
+
+<span class="nc" id="L324">		return findFlightEntry(name, departure, arrival, new Timeslot(start, end));</span>
+	}
+
+	/**
+	 * 找到指定的计划项
+	 * 
+	 * @param name      计划项名
+	 * @param departure 出发位置
+	 * @param arrival   到达位置
+	 * @param time      时间表
+	 * @return 非空 相应的航班计划项 null 没有相应的航班计划项
+	 */
+	public PlanningEntry&lt;Plane&gt; findFlightEntry(String name, String departure, String arrival, Timeslot time) {
+<span class="fc" id="L337">		Iterator&lt;PlanningEntry&lt;Plane&gt;&gt; iter = board.iterator();</span>
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">		while (iter.hasNext()) {</span>
+<span class="fc" id="L339">			FlightEntry&lt;Plane&gt; fe = (FlightEntry&lt;Plane&gt;) iter.next();</span>
+<span class="pc bpc" id="L340" title="1 of 4 branches missed.">			if (fe.getName().equals(name) &amp;&amp; fe.getDeparture().getName().equals(departure)</span>
+<span class="pc bpc" id="L341" title="2 of 4 branches missed.">					&amp;&amp; fe.getArrival().getName().equals(arrival) &amp;&amp; fe.getTimeslot().equals(time))</span>
+<span class="fc" id="L342">				return fe;</span>
+		}
+<span class="nc" id="L344">		return null;</span>
+	}
+
+	/**
+	 * 增加一条新的计划项
+	 */
+	public void addFlight() {
+<span class="nc" id="L351">		String name = JOptionPane.showInputDialog(&quot;航班号：&quot;);</span>
+<span class="nc" id="L352">		String departure = JOptionPane.showInputDialog(&quot;起飞机场：&quot;);</span>
+<span class="nc" id="L353">		String arrival = JOptionPane.showInputDialog(&quot;降落机场：&quot;);</span>
+<span class="nc" id="L354">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc" id="L355">		String start = &quot;&quot;;</span>
+<span class="nc" id="L356">		String end = &quot;&quot;;</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		while (!start.matches(regex))</span>
+<span class="nc" id="L358">			start = JOptionPane.showInputDialog(&quot;起飞时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		while (!end.matches(regex))</span>
+<span class="nc" id="L360">			end = JOptionPane.showInputDialog(&quot;降落时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+
+<span class="nc" id="L362">		Location departureLoc = null, arrivalLoc = null;</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		for (Location loc : locations) {</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			if (loc.getName().equals(departure))</span>
+<span class="nc" id="L365">				departureLoc = loc;</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			else if (loc.getName().equals(arrival))</span>
+<span class="nc" id="L367">				arrivalLoc = loc;</span>
+		}
+<span class="nc" id="L369">		String flightInfo = &quot;Entry:&quot; + name + &quot;,Departure:&quot; + departure + &quot;,Arrival:&quot; + arrival + &quot;,StartTime:&quot; + start</span>
+<span class="nc" id="L370">				+ &quot;,EndTime:&quot; + end;</span>
+<span class="nc bnc" id="L371" title="All 4 branches missed.">		if (departureLoc == null || arrivalLoc == null) {</span>
+<span class="nc" id="L372">			log.info(&quot;AddFlight;&quot; + flightInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L373">			JOptionPane.showMessageDialog(null, &quot;无位置，添加失败！&quot;);</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">		} else if (addFlight(name, departureLoc, arrivalLoc, start, end)) {</span>
+<span class="nc" id="L375">			log.info(&quot;AddFlight;&quot; + flightInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L376">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L377">		} else {</span>
+<span class="nc" id="L378">			log.info(&quot;AddFlight;&quot; + flightInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L379">			JOptionPane.showMessageDialog(null, &quot;已有该计划项，添加失败！&quot;);</span>
+		}
+<span class="nc" id="L381">	}</span>
+
+	/**
+	 * 增加一条新的计划项的功能实现部分
+	 * 
+	 * @param name         航班号，非空
+	 * @param departureLoc 起飞机场，非空
+	 * @param arrivalLoc   降落机场，非空，和起飞机场不同
+	 * @param start        起飞时间，格式yyyy-MM-dd
+	 * @param end          降落时间，格式yyyy-MM-dd
+	 * @return true 添加成功;false 计划项已存在
+	 */
+	public boolean addFlight(String name, Location departureLoc, Location arrivalLoc, String start, String end) {
+<span class="fc" id="L394">		Iterator&lt;PlanningEntry&lt;Plane&gt;&gt; iter = board.iterator();</span>
+<span class="fc bfc" id="L395" title="All 2 branches covered.">		while (iter.hasNext()) {</span>
+<span class="fc" id="L396">			FlightEntry&lt;Plane&gt; fe = (FlightEntry&lt;Plane&gt;) iter.next();</span>
+<span class="pc bpc" id="L397" title="1 of 4 branches missed.">			if (fe.getName().equals(name) &amp;&amp; fe.getDeparture().equals(departureLoc)</span>
+<span class="pc bpc" id="L398" title="2 of 4 branches missed.">					&amp;&amp; fe.getArrival().equals(arrivalLoc) &amp;&amp; fe.getTimeslot().equals(new Timeslot(start, end)))</span>
+<span class="fc" id="L399">				return false;</span>
+		}
+<span class="fc" id="L401">		PlanningEntry&lt;Plane&gt; flightEntry = PlanningEntry.flightEntry(name, departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L402">		board.addFlightEntry(flightEntry);</span>
+<span class="fc" id="L403">		return true;</span>
+	}
+
+	/**
+	 * 取消某个计划项
+	 */
+	public void cancelFlight() {
+<span class="nc" id="L410">		StringBuilder flightInfo = new StringBuilder();</span>
+<span class="nc" id="L411">		PlanningEntry&lt;Plane&gt; fe = findFlightEntry(flightInfo);</span>
+		try {
+<span class="nc bnc" id="L413" title="All 2 branches missed.">			if (cancelFlight(fe)) {</span>
+<span class="nc" id="L414">				log.info(&quot;CancelFlight;&quot; + flightInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L415">				JOptionPane.showMessageDialog(null, &quot;取消成功！&quot;);</span>
+<span class="nc" id="L416">			} else {</span>
+<span class="nc" id="L417">				log.info(&quot;CancelFlight;&quot; + flightInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L418">				JOptionPane.showMessageDialog(null, &quot;没有该计划项，取消失败！&quot;);</span>
+			}
+<span class="nc" id="L420">		} catch (CannotCancelledException e) {</span>
+<span class="nc" id="L421">			log.info(&quot;CancelFlight;&quot; + flightInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新选择取消的计划项？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L423">				log.warning(&quot;CancelFlight;CannotCancelledException:FlightScheduleApp.cancelFlight(fe);reselect entry&quot;);</span>
+<span class="nc" id="L424">				cancelFlight();</span>
+<span class="nc" id="L425">			} else</span>
+<span class="nc" id="L426">				log.warning(&quot;CancelFlight;CannotCancelledException:FlightScheduleApp.cancelFlight(fe);end&quot;);</span>
+		}
+
+<span class="nc" id="L429">	}</span>
+
+	/**
+	 * 取消计划项功能实现部分
+	 * 
+	 * @param fe 取消的计划项
+	 * @return true 取消成功;false 取消失败，计划项为空
+	 * @throws CannotCancelledException 当前计划项状态不可取消
+	 */
+	public boolean cancelFlight(PlanningEntry&lt;Plane&gt; fe) throws CannotCancelledException {
+<span class="fc bfc" id="L439" title="All 2 branches covered.">		if (fe == null)</span>
+<span class="fc" id="L440">			return false;</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">		if (fe.cancel())</span>
+<span class="fc" id="L442">			return true;</span>
+		else
+<span class="fc" id="L444">			throw new CannotCancelledException(&quot;当前状态不可取消！&quot;);</span>
+	}
+
+	/**
+	 * 为某个计划项分配资源
+	 */
+	public void allocateFlight() {
+<span class="nc" id="L451">		StringBuilder flightInfo = new StringBuilder();</span>
+<span class="nc" id="L452">		PlanningEntry&lt;Plane&gt; fe = findFlightEntry(flightInfo);</span>
+<span class="nc" id="L453">		String id = JOptionPane.showInputDialog(&quot;飞机的编号：&quot;);</span>
+<span class="nc" id="L454">		String type = JOptionPane.showInputDialog(&quot;飞机的编号：&quot;);</span>
+<span class="nc" id="L455">		String seats = JOptionPane.showInputDialog(&quot;飞机的座位数：&quot;);</span>
+<span class="nc" id="L456">		String age = JOptionPane.showInputDialog(&quot;飞机的机龄：&quot;);</span>
+<span class="nc" id="L457">		Plane plane = new Plane(id, type, Integer.parseInt(seats), Double.parseDouble(age));</span>
+<span class="nc" id="L458">		String planeInfo = &quot;,Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,Age:&quot; + age;</span>
+		try {
+<span class="nc bnc" id="L460" title="All 2 branches missed.">			if (fe == null) {</span>
+<span class="nc" id="L461">				log.info(&quot;AllocateFlight;&quot; + flightInfo.toString() + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L462">				JOptionPane.showMessageDialog(null, &quot;没有该计划项，资源分配失败！&quot;);</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">			} else if (!planes.contains(plane)) {</span>
+<span class="nc" id="L464">				log.info(&quot;AllocateFlight;&quot; + flightInfo.toString() + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L465">				JOptionPane.showMessageDialog(null, &quot;没有该资源，资源分配失败！&quot;);</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">			} else if (allocateFlight(fe, plane)) {</span>
+<span class="nc" id="L467">				log.info(&quot;AllocateFlight;&quot; + flightInfo.toString() + planeInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L468">				JOptionPane.showMessageDialog(null, &quot;资源分配成功！&quot;);</span>
+<span class="nc" id="L469">			} else {</span>
+<span class="nc" id="L470">				log.info(&quot;AllocateFlight;&quot; + flightInfo.toString() + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L471">				JOptionPane.showMessageDialog(null, &quot;当前状态不可分配资源！&quot;);</span>
+			}
+<span class="nc" id="L473">		} catch (ResourceOrLocationConflictException e) {</span>
+<span class="nc" id="L474">			log.info(&quot;AllocateFlight;&quot; + flightInfo.toString() + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L475">			JOptionPane.showMessageDialog(null, e.getMessage() + &quot;\n请重新分配资源&quot;);</span>
+<span class="nc" id="L476">			log.warning(</span>
+<span class="nc" id="L477">					&quot;AllocateFlight;ResourceOrLocationConflictException:FlightScheduleApp.allocateFlight(fe,plane);reallocate&quot;);</span>
+<span class="nc" id="L478">			allocateFlight();</span>
+		}
+<span class="nc" id="L480">	}</span>
+
+	/**
+	 * 为计划项分配资源的功能实现部分
+	 * 
+	 * @param fe    待分配的计划项
+	 * @param plane 待分配的资源
+	 * @return true 分配成功; false 分配失败，计划项状态不能分配资源
+	 * @throws ResourceOrLocationConflictException 分配后导致与其他计划项产生资源独占冲突
+	 */
+	public boolean allocateFlight(PlanningEntry&lt;Plane&gt; fe, Plane plane) throws ResourceOrLocationConflictException {
+<span class="fc bfc" id="L491" title="All 2 branches covered.">		if (((FlightEntry&lt;Plane&gt;) fe).allocatePlane(plane)) {</span>
+<span class="fc bfc" id="L492" title="All 2 branches covered.">			if (checkConf.checkResourceExclusiveConflict(board.getFlightEntries()))</span>
+<span class="fc" id="L493">				throw new ResourceOrLocationConflictException(&quot;分配后导致与其他计划项产生资源独占冲突&quot;);</span>
+<span class="fc" id="L494">			return true;</span>
+		} else
+<span class="fc" id="L496">			return false;</span>
+	}
+
+	/**
+	 * 启动某个计划项
+	 */
+	public void runFlight() {
+<span class="nc" id="L503">		StringBuilder flightInfo = new StringBuilder();</span>
+<span class="nc" id="L504">		PlanningEntry&lt;Plane&gt; fe = findFlightEntry(flightInfo);</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">		if (fe == null) {</span>
+<span class="nc" id="L506">			log.info(&quot;RunFlight;&quot; + flightInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L507">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，启动失败！&quot;);</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">		} else if (fe.running()) {</span>
+<span class="nc" id="L509">			log.info(&quot;RunFlight;&quot; + flightInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L510">			JOptionPane.showMessageDialog(null, &quot;启动成功！&quot;);</span>
+<span class="nc" id="L511">		} else {</span>
+<span class="nc" id="L512">			log.info(&quot;RunFlight;&quot; + flightInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L513">			JOptionPane.showMessageDialog(null, &quot;当前状态不可被启动！&quot;);</span>
+		}
+<span class="nc" id="L515">	}</span>
+
+	/**
+	 * 结束某个计划项
+	 */
+	public void endFlight() {
+<span class="nc" id="L521">		StringBuilder flightInfo = new StringBuilder();</span>
+<span class="nc" id="L522">		PlanningEntry&lt;Plane&gt; fe = findFlightEntry(flightInfo);</span>
+<span class="nc bnc" id="L523" title="All 2 branches missed.">		if (fe == null) {</span>
+<span class="nc" id="L524">			log.info(&quot;EndFlight;&quot; + flightInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L525">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，结束失败！&quot;);</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">		} else if (fe.end()) {</span>
+<span class="nc" id="L527">			log.info(&quot;EndFlight;&quot; + flightInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L528">			JOptionPane.showMessageDialog(null, &quot;结束成功！&quot;);</span>
+<span class="nc" id="L529">		} else {</span>
+<span class="nc" id="L530">			log.info(&quot;EndFlight;&quot; + flightInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L531">			JOptionPane.showMessageDialog(null, &quot;当前状态不可被结束！&quot;);</span>
+		}
+<span class="nc" id="L533">	}</span>
+
+	/**
+	 * 选定一个计划项，查看它的当前状态
+	 */
+	public void getState() {
+<span class="nc" id="L539">		StringBuilder flightInfo = new StringBuilder();</span>
+<span class="nc" id="L540">		PlanningEntry&lt;Plane&gt; fe = findFlightEntry(flightInfo);</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">		if (fe == null) {</span>
+<span class="nc" id="L542">			log.info(&quot;GetState;&quot; + flightInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L543">			JOptionPane.showMessageDialog(null, &quot;此计划项不存在！&quot;);</span>
+<span class="nc" id="L544">		} else {</span>
+<span class="nc" id="L545">			log.info(&quot;GetState;&quot; + flightInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L546">			JOptionPane.showMessageDialog(null, &quot;此计划项状态为：&quot; + fe.getState());</span>
+		}
+<span class="nc" id="L548">	}</span>
+
+	/**
+	 * 检测当前的计划项集合中可能存在的资源独占冲突
+	 */
+	public void checkConflict() {
+<span class="nc bnc" id="L554" title="All 2 branches missed.">		if (checkConf.checkResourceExclusiveConflict(board.getFlightEntries())) {</span>
+<span class="nc" id="L555">			log.info(&quot;CheckResourceConflict;existence;success&quot;);</span>
+<span class="nc" id="L556">			JOptionPane.showMessageDialog(null, &quot;存在资源独占冲突！&quot;);</span>
+<span class="nc" id="L557">		} else {</span>
+<span class="nc" id="L558">			log.info(&quot;CheckResourcConflict;inexistence;success&quot;);</span>
+<span class="nc" id="L559">			JOptionPane.showMessageDialog(null, &quot;不存在资源独占冲突！&quot;);</span>
+		}
+<span class="nc" id="L561">	}</span>
+
+	/**
+	 * 针对用户选定的某个资源，列出使用该资源的所有计划项
+	 */
+	public void findAllEntryUseResource() {
+<span class="nc" id="L567">		String id = JOptionPane.showInputDialog(&quot;飞机的编号：&quot;);</span>
+<span class="nc" id="L568">		String type = JOptionPane.showInputDialog(&quot;飞机的型号：&quot;);</span>
+<span class="nc" id="L569">		String seats = JOptionPane.showInputDialog(&quot;飞机的座位数：&quot;);</span>
+<span class="nc" id="L570">		String age = JOptionPane.showInputDialog(&quot;飞机的机龄：&quot;);</span>
+<span class="nc" id="L571">		Plane plane = new Plane(id, type, Integer.parseInt(seats), Double.parseDouble(age));</span>
+<span class="nc" id="L572">		String planeInfo = &quot;编号:&quot; + id + &quot;,机型:&quot; + type + &quot;,座位数&quot; + seats + &quot;,机龄:&quot; + age;</span>
+<span class="nc bnc" id="L573" title="All 2 branches missed.">		if (!planes.contains(plane)) {</span>
+<span class="nc" id="L574">			log.info(&quot;FindAllEntryUseResource;&quot; + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L575">			JOptionPane.showMessageDialog(null, &quot;此资源不存在！&quot;);</span>
+<span class="nc" id="L576">			return;</span>
+		}
+<span class="nc" id="L578">		List&lt;PlanningEntry&lt;Plane&gt;&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L579">		Iterator&lt;PlanningEntry&lt;Plane&gt;&gt; iter = board.iterator();</span>
+<span class="nc bnc" id="L580" title="All 2 branches missed.">		while (iter.hasNext()) {</span>
+<span class="nc" id="L581">			FlightEntry&lt;Plane&gt; fe = (FlightEntry&lt;Plane&gt;) iter.next();</span>
+<span class="nc bnc" id="L582" title="All 2 branches missed.">			if (((FlightEntry&lt;Plane&gt;) fe).getResource().equals(plane))</span>
+<span class="nc" id="L583">				list.add(fe);</span>
+		}
+
+<span class="nc" id="L586">		Object[][] str = new Object[list.size()][4];</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">		for (int i = 0; i &lt; list.size(); i++) {</span>
+<span class="nc" id="L588">			FlightEntry&lt;Plane&gt; fe = (FlightEntry&lt;Plane&gt;) list.get(i);</span>
+<span class="nc" id="L589">			String[] s = { fe.getName(), fe.getTimeslot().toString(),</span>
+<span class="nc" id="L590">					fe.getDeparture().getName() + &quot;-&gt;&quot; + fe.getArrival().getName(), fe.getState() };</span>
+<span class="nc" id="L591">			str[i] = s;</span>
+		}
+<span class="nc" id="L593">		log.info(&quot;FindAllEntryUseResource;&quot; + planeInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L594">		String[] title = { &quot;Entry&quot;, &quot;Time&quot;, &quot;From and To&quot;, &quot;State&quot; };</span>
+<span class="nc" id="L595">		board.visualize(str, title, &quot;使用该资源的所有计划项&quot;);</span>
+<span class="nc" id="L596">	}</span>
+
+	/**
+	 * 针对用户选定的某个资源和某个计划项之后，找出它的前序计划项
+	 */
+	public void findPreEntryUseResource() {
+<span class="nc" id="L602">		String id = JOptionPane.showInputDialog(&quot;飞机的编号：&quot;);</span>
+<span class="nc" id="L603">		String type = JOptionPane.showInputDialog(&quot;飞机的型号：&quot;);</span>
+<span class="nc" id="L604">		String seats = JOptionPane.showInputDialog(&quot;飞机的座位数：&quot;);</span>
+<span class="nc" id="L605">		String age = JOptionPane.showInputDialog(&quot;飞机的机龄：&quot;);</span>
+<span class="nc" id="L606">		Plane plane = new Plane(id, type, Integer.parseInt(seats), Double.parseDouble(age));</span>
+<span class="nc" id="L607">		String planeInfo = &quot;,Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,Age:&quot; + age;</span>
+<span class="nc" id="L608">		StringBuilder flightInfo = new StringBuilder();</span>
+<span class="nc" id="L609">		PlanningEntry&lt;Plane&gt; fe = findFlightEntry(flightInfo);</span>
+<span class="nc bnc" id="L610" title="All 2 branches missed.">		if (!planes.contains(plane)) {</span>
+<span class="nc" id="L611">			log.info(&quot;FindPreEntryUseResource;&quot; + flightInfo + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L612">			JOptionPane.showMessageDialog(null, &quot;此资源不存在！&quot;);</span>
+<span class="nc bnc" id="L613" title="All 2 branches missed.">		} else if (fe == null) {</span>
+<span class="nc" id="L614">			log.info(&quot;FindPreEntryUseResource;&quot; + flightInfo + planeInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L615">			JOptionPane.showMessageDialog(null, &quot;此计划项不存在！&quot;);</span>
+<span class="nc" id="L616">		} else {</span>
+<span class="nc" id="L617">			FlightEntry&lt;Plane&gt; prefe = (FlightEntry&lt;Plane&gt;) checkConf.findPreEntryPerResource(plane, fe,</span>
+<span class="nc" id="L618">					board.getFlightEntries());</span>
+<span class="nc" id="L619">			JOptionPane.showMessageDialog(null,</span>
+<span class="nc" id="L620">					&quot;Entry:&quot; + prefe.getName() + &quot;\nTime:&quot; + prefe.getTimeslot().toString() + &quot;\nFrom:&quot;</span>
+<span class="nc" id="L621">							+ prefe.getDeparture().getName() + &quot;\nTo:&quot; + prefe.getArrival().getName() + &quot;\nState:&quot;</span>
+<span class="nc" id="L622">							+ fe.getState());</span>
+<span class="nc" id="L623">			log.info(&quot;FindPreEntryUseResource;&quot; + flightInfo + planeInfo + &quot;;success&quot;);</span>
+		}
+<span class="nc" id="L625">	}</span>
+
+	/**
+	 * 选定特定位置，可视化展示当前时刻该位置的信息板
+	 */
+	public void findLocation() {
+<span class="nc" id="L631">		String name = JOptionPane.showInputDialog(&quot;机场的名字：&quot;);</span>
+<span class="nc" id="L632">		String time = JOptionPane.showInputDialog(&quot;查询时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L633">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc bnc" id="L634" title="All 2 branches missed.">		while (!time.matches(regex))</span>
+<span class="nc" id="L635">			time = JOptionPane.showInputDialog(&quot;查询时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L636">		Location loc = new Location(name, true);</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">		if (!locations.contains(loc)) {</span>
+<span class="nc" id="L638">			log.info(&quot;FindLocation;Name:&quot; + name + &quot;,Time:&quot; + time + &quot;;fail&quot;);</span>
+<span class="nc" id="L639">			JOptionPane.showMessageDialog(null, &quot;无此位置！&quot;);</span>
+<span class="nc" id="L640">			return;</span>
+		}
+<span class="nc" id="L642">		log.info(&quot;FindLocation;Name:&quot; + name + &quot;,Time:&quot; + time + &quot;;success&quot;);</span>
+<span class="nc" id="L643">		board.allEntryAtLocation(loc, time);</span>
+<span class="nc" id="L644">	}</span>
+
+	/**
+	 * 从文件中读取航班计划项信息
+	 */
+	public void readFileCreatFlightSchedule() {
+<span class="nc" id="L650">		String filePath = JOptionPane.showInputDialog(&quot;文件路径：&quot;);</span>
+		try {
+<span class="nc" id="L652">			List&lt;PlanningEntry&lt;Plane&gt;&gt; entryList = entries(filePath);</span>
+<span class="nc bnc" id="L653" title="All 2 branches missed.">			for (PlanningEntry&lt;Plane&gt; pe : entryList) {</span>
+<span class="nc" id="L654">				board.addFlightEntry(pe);</span>
+<span class="nc" id="L655">				Plane plane = ((FlightEntry&lt;Plane&gt;) pe).getResource();</span>
+<span class="nc" id="L656">				Location departureLoc = ((FlightEntry&lt;Plane&gt;) pe).getDeparture();</span>
+<span class="nc" id="L657">				Location arrivalLoc = ((FlightEntry&lt;Plane&gt;) pe).getArrival();</span>
+<span class="nc bnc" id="L658" title="All 2 branches missed.">				if (!planes.contains(plane))</span>
+<span class="nc" id="L659">					planes.add(plane);</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">				if (!locations.contains(departureLoc))</span>
+<span class="nc" id="L661">					locations.add(departureLoc);</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">				if (!locations.contains(arrivalLoc))</span>
+<span class="nc" id="L663">					locations.add(arrivalLoc);</span>
+			}
+<span class="nc" id="L665">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;success&quot;);</span>
+<span class="nc" id="L666">		} catch (InherentFormatException e) {</span>
+<span class="nc" id="L667">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L668" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L669">				log.warning(</span>
+<span class="nc" id="L670">						&quot;ReadFileCreatFlightSchedule;InherentFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L671">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L672">			} else</span>
+<span class="nc" id="L673">				log.warning(&quot;ReadFileCreatFlightSchedule;InherentFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L674">		} catch (DateTimeFormatException e) {</span>
+<span class="nc" id="L675">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L676" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L677">				log.warning(</span>
+<span class="nc" id="L678">						&quot;ReadFileCreatFlightSchedule;DateTimeFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L679">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L680">			} else</span>
+<span class="nc" id="L681">				log.warning(&quot;ReadFileCreatFlightSchedule;DateTimeFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L682">		} catch (EntryNameFormatException e) {</span>
+<span class="nc" id="L683">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L684" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L685">				log.warning(</span>
+<span class="nc" id="L686">						&quot;ReadFileCreatFlightSchedule;EntryNameFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L687">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L688">			} else</span>
+<span class="nc" id="L689">				log.warning(&quot;ReadFileCreatFlightSchedule;EntryNameFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L690">		} catch (AirportFormatException e) {</span>
+<span class="nc" id="L691">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L692" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L693">				log.warning(</span>
+<span class="nc" id="L694">						&quot;ReadFileCreatFlightSchedule;AirportFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L695">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L696">			} else</span>
+<span class="nc" id="L697">				log.warning(&quot;ReadFileCreatFlightSchedule;AirportFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L698">		} catch (PlaneCodeFormatException e) {</span>
+<span class="nc" id="L699">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L700" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L701">				log.warning(</span>
+<span class="nc" id="L702">						&quot;ReadFileCreatFlightSchedule;PlaneCodeFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L703">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L704">			} else</span>
+<span class="nc" id="L705">				log.warning(&quot;ReadFileCreatFlightSchedule;PlaneCodeFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L706">		} catch (PlaneTypeFormatException e) {</span>
+<span class="nc" id="L707">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L709">				log.warning(</span>
+<span class="nc" id="L710">						&quot;ReadFileCreatFlightSchedule;PlaneTypeFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L711">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L712">			} else</span>
+<span class="nc" id="L713">				log.warning(&quot;ReadFileCreatFlightSchedule;PlaneTypeFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L714">		} catch (PlaneSeatsFormatException e) {</span>
+<span class="nc" id="L715">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L717">				log.warning(</span>
+<span class="nc" id="L718">						&quot;ReadFileCreatFlightSchedule;PlaneSeatsFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L719">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L720">			} else</span>
+<span class="nc" id="L721">				log.warning(&quot;ReadFileCreatFlightSchedule;PlaneSeatsFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L722">		} catch (PlaneAgeFormatException e) {</span>
+<span class="nc" id="L723">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L724" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L725">				log.warning(</span>
+<span class="nc" id="L726">						&quot;ReadFileCreatFlightSchedule;PlaneAgeFormatException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L727">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L728">			} else</span>
+<span class="nc" id="L729">				log.warning(&quot;ReadFileCreatFlightSchedule;PlaneAgeFormatException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L730">		} catch (DepartureDateInconsistentException e) { // 依赖异常1</span>
+<span class="nc" id="L731">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L733">				readFileCreatFlightSchedule();</span>
+			}
+<span class="nc" id="L735">		} catch (ArrivalDateInconsistentException e) { // 依赖异常2</span>
+<span class="nc" id="L736">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L738">				log.warning(</span>
+<span class="nc" id="L739">						&quot;ReadFileCreatFlightSchedule;ArrivalDateInconsistentException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L740">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L741">			} else</span>
+<span class="nc" id="L742">				log.warning(</span>
+<span class="nc" id="L743">						&quot;ReadFileCreatFlightSchedule;ArrivalDateInconsistentException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L744">		} catch (SameInfoEntryException e) { // 标签相同异常</span>
+<span class="nc" id="L745">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L746" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L747">				log.warning(</span>
+<span class="nc" id="L748">						&quot;ReadFileCreatFlightSchedule;SameInfoEntryException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L749">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L750">			} else</span>
+<span class="nc" id="L751">				log.warning(&quot;ReadFileCreatFlightSchedule;SameInfoEntryException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L752">		} catch (EntryInfoInconsistentException e) { // 依赖异常3</span>
+<span class="nc" id="L753">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L754" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L755">				log.warning(</span>
+<span class="nc" id="L756">						&quot;ReadFileCreatFlightSchedule;EntryInfoInconsistentException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L757">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L758">			} else</span>
+<span class="nc" id="L759">				log.warning(</span>
+<span class="nc" id="L760">						&quot;ReadFileCreatFlightSchedule;EntryInfoInconsistentException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L761">		} catch (PlaneInfoInconsistentException e) { // 依赖异常4</span>
+<span class="nc" id="L762">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L763" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L764">				log.warning(</span>
+<span class="nc" id="L765">						&quot;ReadFileCreatFlightSchedule;PlaneInfoInconsistentException:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L766">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L767">			} else</span>
+<span class="nc" id="L768">				log.warning(</span>
+<span class="nc" id="L769">						&quot;ReadFileCreatFlightSchedule;PlaneInfoInconsistentException:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L770">		} catch (FileNotFoundException e) { // 文件不存在</span>
+<span class="nc" id="L771">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L772" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, &quot;文件不存在\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L773">				log.warning(&quot;ReadFileCreatFlightSchedule;Exception:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L774">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L775">			} else</span>
+<span class="nc" id="L776">				log.warning(&quot;ReadFileCreatFlightSchedule;Exception:FlightSchedule.entry(filePath);end&quot;);</span>
+<span class="nc" id="L777">		} catch (Exception e) { // 格式错误导致的未知异常</span>
+<span class="nc" id="L778">			log.info(&quot;ReadFileCreatFlightSchedule;FilePath:&quot; + filePath + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L779" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n是否要更换文件？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L780">				log.warning(&quot;ReadFileCreatFlightSchedule;Exception:FlightSchedule.entry(filePath);reselect file&quot;);</span>
+<span class="nc" id="L781">				readFileCreatFlightSchedule();</span>
+<span class="nc" id="L782">			} else</span>
+<span class="nc" id="L783">				log.warning(&quot;ReadFileCreatFlightSchedule;Exception:FlightSchedule.entry(filePath);end&quot;);</span>
+		}
+<span class="nc" id="L785">	}</span>
+
+	/**
+	 * 文件信息处理
+	 * 
+	 * @param filePath 文件路径
+	 * @return 包含文件中所有的计划项信息的列表
+	 * @throws InherentFormatException            文件固定格式错误
+	 * @throws DateTimeFormatException            时间信息错误
+	 * @throws EntryNameFormatException           计划项名称格式错误
+	 * @throws AirportFormatException             机场名称格式错误
+	 * @throws PlaneCodeFormatException           飞机编号格式错误
+	 * @throws PlaneTypeFormatException           飞机类型格式错误
+	 * @throws PlaneSeatsFormatException          飞机座位格式错误
+	 * @throws PlaneAgeFormatException            飞机机龄格式错误
+	 * @throws DepartureDateInconsistentException 起飞日期和航班日期不一致错误
+	 * @throws ArrivalDateInconsistentException   降落日期和航班日期差距超过一天错误
+	 * @throws SameInfoEntryException             同名同日期计划项错误
+	 * @throws EntryInfoInconsistentException     不同日期同名计划项起降时间和机场不完全一致错误
+	 * @throws PlaneInfoInconsistentException     同编号飞机信息不一致错误
+	 * @throws FileNotFoundException              文件不存在
+	 */
+	public List&lt;PlanningEntry&lt;Plane&gt;&gt; entries(String filePath)
+			throws InherentFormatException, DateTimeFormatException, EntryNameFormatException, AirportFormatException,
+			PlaneCodeFormatException, PlaneTypeFormatException, PlaneSeatsFormatException, PlaneAgeFormatException,
+			DepartureDateInconsistentException, ArrivalDateInconsistentException, SameInfoEntryException,
+			EntryInfoInconsistentException, PlaneInfoInconsistentException, FileNotFoundException {
+<span class="fc" id="L812">		List&lt;PlanningEntry&lt;Plane&gt;&gt; entryList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L813">		Scanner input = new Scanner(new File(filePath));</span>
+		// 拆分成数组匹配
+<span class="fc" id="L815">		String[] pattens = { &quot;Flight:&quot;, &quot;\\d{4}-\\d{2}-\\d{2}&quot;, &quot;,&quot;, &quot;[A-Z]{2}\\d{2,4}&quot;, &quot;\\{&quot;, &quot;DepartureAirport:&quot;,</span>
+<span class="fc" id="L816">				&quot;[a-zA-Z]+&quot;, &quot;ArrivalAirport:&quot;, &quot;DepatureTime:&quot;, &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;, &quot;ArrivalTime:&quot;,</span>
+<span class="fc" id="L817">				&quot;Plane:&quot;, &quot;[N|B]\\d{4}&quot;, &quot;Type:&quot;, &quot;[a-zA-Z0-9]+&quot;, &quot;Seats:&quot;, &quot;[1-6]\\d{2}|[5-9]\\d&quot;, &quot;Age:&quot;,</span>
+<span class="fc" id="L818">				&quot;(\\d|[1-2]\\d|30)\\.?\\d?&quot;, &quot;\\}\\}&quot; };</span>
+		List&lt;String&gt; stringList;
+<span class="fc" id="L820">		int fileLineNum = 0;</span>
+<span class="pc bpc" id="L821" title="1 of 2 branches missed.">		while (input.hasNext()) {</span>
+<span class="fc" id="L822">			int entryLineNum = 0;</span>
+<span class="fc" id="L823">			stringList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L824">			String in = &quot;&quot;, date = null, name = null, departure = null, arrival = null;</span>
+<span class="fc" id="L825">			String start = null, end = null, id = null, type = null, seats = null, age = null;</span>
+<span class="fc" id="L826">			Plane plane = null;</span>
+<span class="fc bfc" id="L827" title="All 2 branches covered.">			while (!in.equals(&quot;}}&quot;)) {</span>
+<span class="fc" id="L828">				in = input.nextLine();</span>
+<span class="fc" id="L829">				entryLineNum++;</span>
+<span class="fc bfc" id="L830" title="All 2 branches covered.">				if (in.equals(&quot;}&quot;)) {</span>
+<span class="fc" id="L831">					in = in + input.nextLine();</span>
+<span class="fc" id="L832">					entryLineNum++;</span>
+				}
+<span class="pc bpc" id="L834" title="1 of 2 branches missed.">				if (!in.equals(&quot;&quot;))</span>
+<span class="fc" id="L835">					stringList.add(in);</span>
+			}
+			// 解析
+<span class="fc bfc" id="L838" title="All 2 branches covered.">			for (int i = 0; i &lt; stringList.size(); i++) {</span>
+<span class="fc" id="L839">				String s = stringList.get(i);</span>
+<span class="pc bpc" id="L840" title="1 of 13 branches missed.">				switch (i) {</span>
+				case 0:
+<span class="fc" id="L842">					date = s.substring(7, 17);</span>
+<span class="fc" id="L843">					name = s.substring(18);</span>
+<span class="pc bpc" id="L844" title="1 of 4 branches missed.">					if (!s.substring(0, 7).matches(pattens[0]) || !s.substring(17, 18).matches(pattens[2]))</span>
+<span class="fc" id="L845">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 1) + &quot;行固定格式有误&quot;);</span>
+<span class="pc bpc" id="L846" title="1 of 2 branches missed.">					if (!date.matches(pattens[1]))</span>
+<span class="nc" id="L847">						throw new DateTimeFormatException(&quot;第&quot; + (fileLineNum + 1) + &quot;行日期格式有误&quot;);</span>
+<span class="fc bfc" id="L848" title="All 2 branches covered.">					if (!name.matches(pattens[3]))</span>
+<span class="fc" id="L849">						throw new EntryNameFormatException(&quot;第&quot; + (fileLineNum + 1) + &quot;行航班号格式有误&quot;);</span>
+					break;
+				case 1:
+<span class="pc bpc" id="L852" title="1 of 2 branches missed.">					if (!s.matches(pattens[4]))</span>
+<span class="nc" id="L853">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 2) + &quot;行左大括号格式有误&quot;);</span>
+					break;
+				case 2:
+<span class="fc" id="L856">					departure = s.substring(17);</span>
+<span class="pc bpc" id="L857" title="1 of 2 branches missed.">					if (!s.substring(0, 17).matches(pattens[5]))</span>
+<span class="nc" id="L858">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 3) + &quot;行固定格式有误&quot;);</span>
+<span class="fc bfc" id="L859" title="All 2 branches covered.">					if (!departure.matches(pattens[6]))</span>
+<span class="fc" id="L860">						throw new AirportFormatException(&quot;第&quot; + (fileLineNum + 3) + &quot;行机场名称格式有误&quot;);</span>
+					break;
+				case 3:
+<span class="fc" id="L863">					arrival = s.substring(15);</span>
+<span class="pc bpc" id="L864" title="1 of 2 branches missed.">					if (!s.substring(0, 15).matches(pattens[7]))</span>
+<span class="nc" id="L865">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 4) + &quot;行固定格式有误&quot;);</span>
+<span class="pc bpc" id="L866" title="1 of 2 branches missed.">					if (!arrival.matches(pattens[6]))</span>
+<span class="nc" id="L867">						throw new AirportFormatException(&quot;第&quot; + (fileLineNum + 4) + &quot;行机场名称格式有误&quot;);</span>
+					break;
+				case 4:
+<span class="fc" id="L870">					start = s.substring(13);</span>
+<span class="pc bpc" id="L871" title="1 of 2 branches missed.">					if (!s.substring(0, 13).matches(pattens[8]))</span>
+<span class="nc" id="L872">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 5) + &quot;行固定格式有误&quot;);</span>
+<span class="fc bfc" id="L873" title="All 2 branches covered.">					if (!start.matches(pattens[9]))</span>
+<span class="fc" id="L874">						throw new DateTimeFormatException(&quot;第&quot; + (fileLineNum + 5) + &quot;行时间格式有误&quot;);</span>
+					break;
+				case 5:
+<span class="fc" id="L877">					end = s.substring(12);</span>
+<span class="pc bpc" id="L878" title="1 of 2 branches missed.">					if (!s.substring(0, 12).matches(pattens[10]))</span>
+<span class="nc" id="L879">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 6) + &quot;行固定格式有误&quot;);</span>
+<span class="pc bpc" id="L880" title="1 of 2 branches missed.">					if (!end.matches(pattens[9]))</span>
+<span class="nc" id="L881">						throw new DateTimeFormatException(&quot;第&quot; + (fileLineNum + 6) + &quot;行时间格式有误&quot;);</span>
+					break;
+				case 6:
+<span class="fc" id="L884">					id = s.substring(6);</span>
+<span class="pc bpc" id="L885" title="1 of 2 branches missed.">					if (!s.substring(0, 6).matches(pattens[11]))</span>
+<span class="nc" id="L886">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 7) + &quot;行固定格式有误&quot;);</span>
+<span class="fc bfc" id="L887" title="All 2 branches covered.">					if (!id.matches(pattens[12]))</span>
+<span class="fc" id="L888">						throw new PlaneCodeFormatException(&quot;第&quot; + (fileLineNum + 7) + &quot;行飞机编号格式有误&quot;);</span>
+					break;
+				case 7:
+<span class="pc bpc" id="L891" title="1 of 2 branches missed.">					if (!s.matches(pattens[4]))</span>
+<span class="nc" id="L892">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 8) + &quot;行左大括号格式有误&quot;);</span>
+					break;
+				case 8:
+<span class="fc" id="L895">					type = s.substring(5);</span>
+<span class="pc bpc" id="L896" title="1 of 2 branches missed.">					if (!s.substring(0, 5).matches(pattens[13]))</span>
+<span class="nc" id="L897">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 9) + &quot;行固定格式有误&quot;);</span>
+<span class="fc bfc" id="L898" title="All 2 branches covered.">					if (!type.matches(pattens[14]))</span>
+<span class="fc" id="L899">						throw new PlaneTypeFormatException(&quot;第&quot; + (fileLineNum + 9) + &quot;行飞机机型格式有误&quot;);</span>
+					break;
+				case 9:
+<span class="fc" id="L902">					seats = s.substring(6);</span>
+<span class="pc bpc" id="L903" title="1 of 2 branches missed.">					if (!s.substring(0, 6).matches(pattens[15]))</span>
+<span class="nc" id="L904">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 10) + &quot;行固定格式有误&quot;);</span>
+<span class="fc bfc" id="L905" title="All 2 branches covered.">					if (!seats.matches(pattens[16]))</span>
+<span class="fc" id="L906">						throw new PlaneSeatsFormatException(&quot;第&quot; + (fileLineNum + 10) + &quot;行座位数格式有误&quot;);</span>
+					break;
+				case 10:
+<span class="fc" id="L909">					age = s.substring(4);</span>
+<span class="pc bpc" id="L910" title="1 of 2 branches missed.">					if (!s.substring(0, 4).matches(pattens[17]))</span>
+<span class="nc" id="L911">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 11) + &quot;行固定格式有误&quot;);</span>
+<span class="fc bfc" id="L912" title="All 2 branches covered.">					if (!age.matches(pattens[18]))</span>
+<span class="fc" id="L913">						throw new PlaneAgeFormatException(&quot;第&quot; + (fileLineNum + 11) + &quot;行机龄格式有误&quot;);</span>
+					break;
+				case 11:
+<span class="pc bpc" id="L916" title="1 of 2 branches missed.">					if (!s.matches(pattens[19]))</span>
+<span class="nc" id="L917">						throw new InherentFormatException(&quot;第&quot; + (fileLineNum + 12) + &quot;行右括号格式有误&quot;);</span>
+					break;
+				default:
+<span class="nc" id="L920">					throw new InherentFormatException(&quot;第&quot; + fileLineNum + &quot;行开始的计划项内部有未知错误&quot;);</span>
+				}
+
+			}
+<span class="fc" id="L924">			DateTimeFormatter df = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;);</span>
+<span class="fc" id="L925">			LocalDate flightDate = LocalDate.parse(date, df);</span>
+<span class="fc" id="L926">			LocalDate endDate = LocalDate.parse(end.substring(0, 10), df);</span>
+<span class="fc" id="L927">			LocalDate startDate = LocalDate.parse(start.substring(0, 10), df);</span>
+<span class="fc bfc" id="L928" title="All 2 branches covered.">			if (!startDate.equals(flightDate))</span>
+<span class="fc" id="L929">				throw new DepartureDateInconsistentException(&quot;第&quot; + (fileLineNum+1) + &quot;行计划项的起飞日期和航班日期不一致&quot;);</span>
+<span class="pc bpc" id="L930" title="1 of 4 branches missed.">			if (!(endDate.equals(flightDate) || endDate.plusDays(-1).equals(flightDate)))</span>
+<span class="fc" id="L931">				throw new ArrivalDateInconsistentException(&quot;第&quot; + (fileLineNum+1) + &quot;行计划项的降落日期和航班日期差距超过一天&quot;);</span>
+<span class="fc" id="L932">			String charOfName = name.substring(0, 2);</span>
+<span class="fc" id="L933">			int numOfName = Integer.parseInt(name.substring(2));</span>
+<span class="fc" id="L934">			String startStr = start.substring(11);</span>
+<span class="fc" id="L935">			String endStr = end.substring(11);</span>
+<span class="fc" id="L936">			plane = new Plane(id, type, Integer.valueOf(seats), Float.valueOf(age));</span>
+<span class="fc bfc" id="L937" title="All 2 branches covered.">			for (PlanningEntry&lt;Plane&gt; pe : entryList) {</span>
+<span class="fc" id="L938">				String peDate = ((FlightEntry&lt;Plane&gt;) pe).getTimeslot().getStartTimeString().substring(0, 10);</span>
+<span class="fc" id="L939">				String charOfpeName = pe.getName().substring(0, 2);</span>
+<span class="fc" id="L940">				int numOfpeName = Integer.parseInt(pe.getName().substring(2));</span>
+<span class="fc" id="L941">				String peDeparture = ((FlightEntry&lt;Plane&gt;) pe).getDeparture().getName();</span>
+<span class="fc" id="L942">				String peArrival = ((FlightEntry&lt;Plane&gt;) pe).getArrival().getName();</span>
+<span class="fc" id="L943">				String peStart = ((FlightEntry&lt;Plane&gt;) pe).getTimeslot().getStartTimeString().substring(11);</span>
+<span class="fc" id="L944">				String peEnd = ((FlightEntry&lt;Plane&gt;) pe).getTimeslot().getEndTimeString().substring(11);</span>
+				// 同一个航班号
+<span class="pc bpc" id="L946" title="2 of 4 branches missed.">				if (charOfpeName.equals(charOfName) &amp;&amp; numOfpeName == numOfName) {</span>
+					// 日期一样
+<span class="fc bfc" id="L948" title="All 2 branches covered.">					if (peDate.equals(date))</span>
+<span class="fc" id="L949">						throw new SameInfoEntryException(&quot;第&quot; + (fileLineNum+1) + &quot;行计划项的标签与之前的计划项完全一样&quot;);</span>
+					// 出发和到达机场不全相同
+<span class="pc bpc" id="L951" title="1 of 4 branches missed.">					if (!peDeparture.equals(departure) || !peArrival.equals(arrival))</span>
+<span class="fc" id="L952">						throw new EntryInfoInconsistentException(&quot;第&quot; + (fileLineNum+1) + &quot;行计划项同名但起降机场不同&quot;);</span>
+					// 出发和到达时间不全相同
+<span class="pc bpc" id="L954" title="2 of 4 branches missed.">					if (!peStart.equals(startStr) || !peEnd.equals(endStr))</span>
+<span class="nc" id="L955">						throw new EntryInfoInconsistentException(&quot;第&quot; + (fileLineNum+1) + &quot;行计划项同名但起降时间不同&quot;);</span>
+				}
+				// 飞机编号相同
+<span class="pc bpc" id="L958" title="1 of 2 branches missed.">				if (((FlightEntry&lt;Plane&gt;) pe).getResource().getID().equals(id)</span>
+<span class="pc bpc" id="L959" title="1 of 2 branches missed.">						&amp;&amp; !((FlightEntry&lt;Plane&gt;) pe).getResource().equals(plane))</span>
+<span class="fc" id="L960">					throw new PlaneInfoInconsistentException(&quot;第&quot; + (fileLineNum+1) + &quot;行计划项的飞机与之前的同编号飞机信息不一致&quot;);</span>
+			}
+<span class="fc" id="L962">			fileLineNum += entryLineNum;</span>
+<span class="fc" id="L963">			Location departureLoc = new Location(departure, true);</span>
+<span class="fc" id="L964">			Location arrivalLoc = new Location(arrival, true);</span>
+			// 满足条件，加入到计划项列表中
+<span class="fc" id="L966">			PlanningEntry&lt;Plane&gt; flightEntry = PlanningEntry.flightEntry(name, departureLoc, arrivalLoc, start, end);</span>
+<span class="fc" id="L967">			entryList.add(flightEntry);</span>
+<span class="fc" id="L968">			((FlightEntry&lt;Plane&gt;) flightEntry).allocatePlane(plane);</span>
+		}
+<span class="nc" id="L970">		input.close();</span>
+<span class="nc" id="L971">		return entryList;</span>
+	}
+
+	/**
+	 * 显示日志
+	 */
+	public void readLog() {
+<span class="nc" id="L978">		Scanner input = null;</span>
+		try {
+<span class="nc" id="L980">			input = new Scanner(new File(&quot;src/log/flightlog.log&quot;));</span>
+<span class="nc" id="L981">		} catch (Exception e) {</span>
+<span class="nc" id="L982">			JOptionPane.showMessageDialog(null, &quot;日志文件错误！&quot;);</span>
+<span class="nc" id="L983">			return;</span>
+		}
+<span class="nc" id="L985">		DateTimeFormatter df = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+<span class="nc" id="L986">		LocalDateTime start = null, end = null;</span>
+<span class="nc" id="L987">		JOptionPane.showMessageDialog(null, &quot;以下四项内容不填或格式不符均视为该项无限制&quot;);</span>
+<span class="nc" id="L988">		String startTime = JOptionPane.showInputDialog(&quot;查询时间段的开始时间\n格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L989" title="All 2 branches missed.">		if (startTime.matches(&quot;\\d{4}-\\d{2}-\\d{2} \\d{2}-\\{2}&quot;))</span>
+<span class="nc" id="L990">			start = LocalDateTime.parse(startTime, df);</span>
+<span class="nc" id="L991">		String endTime = JOptionPane.showInputDialog(&quot;查询时间段的开始时间\n格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L992" title="All 2 branches missed.">		if (endTime.matches(&quot;\\d{4}-\\d{2}-\\d{2} \\d{2}-\\{2}&quot;))</span>
+<span class="nc" id="L993">			end = LocalDateTime.parse(endTime, df);</span>
+<span class="nc" id="L994">		String actionType = JOptionPane.showInputDialog(&quot;查询操作类型：&quot;);</span>
+<span class="nc" id="L995">		String entryName = JOptionPane.showInputDialog(&quot;查询计划项名：&quot;);</span>
+
+<span class="nc" id="L997">		List&lt;String[]&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L998">		DateFormat formatFrom = new SimpleDateFormat(&quot;MMM dd, yyyy KK:mm:ss aa&quot;, Locale.ENGLISH);</span>
+<span class="nc" id="L999">		DateFormat formatTo = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+<span class="nc" id="L1000">		DateTimeFormatter df2 = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+		try {
+<span class="nc bnc" id="L1002" title="All 2 branches missed.">			while (input.hasNext()) {</span>
+<span class="nc" id="L1003">				String[] logline = new String[5];</span>
+<span class="nc" id="L1004">				String line1 = input.nextLine();</span>
+<span class="nc" id="L1005">				String line2 = input.nextLine();</span>
+<span class="nc" id="L1006">				int pos = line1.indexOf(&quot;flight&quot;);</span>
+<span class="nc" id="L1007">				logline[0] = line1.substring(0, pos - 1);</span>
+<span class="nc" id="L1008">				Date date = formatFrom.parse(logline[0]);</span>
+<span class="nc" id="L1009">				LocalDateTime time = LocalDateTime.parse(formatTo.format(date), df2);</span>
+<span class="nc" id="L1010">				pos = line2.indexOf(&quot;:&quot;);</span>
+<span class="nc" id="L1011">				logline[1] = line2.substring(0, pos);</span>
+<span class="nc" id="L1012">				String[] message = line2.substring(pos).split(&quot;;&quot;);</span>
+<span class="nc" id="L1013">				logline[2] = message[0];</span>
+<span class="nc" id="L1014">				logline[3] = message[1];</span>
+<span class="nc" id="L1015">				logline[4] = message[2];</span>
+<span class="nc bnc" id="L1016" title="All 8 branches missed.">				if ((start != null &amp;&amp; start.isAfter(time)) || (end != null &amp;&amp; end.isBefore(time)))</span>
+<span class="nc" id="L1017">					continue;</span>
+<span class="nc bnc" id="L1018" title="All 4 branches missed.">				if (actionType != &quot;&quot; &amp;&amp; actionType.equals(logline[2]))</span>
+<span class="nc" id="L1019">					continue;</span>
+<span class="nc bnc" id="L1020" title="All 4 branches missed.">				if (entryName != &quot;&quot; &amp;&amp; entryName.equals(logline[4]))</span>
+<span class="nc" id="L1021">					continue;</span>
+<span class="nc" id="L1022">				list.add(logline);</span>
+			}
+<span class="nc" id="L1024">		} catch (ParseException e) {</span>
+<span class="nc" id="L1025">			return;</span>
+		}
+<span class="nc" id="L1027">		input.close();</span>
+<span class="nc" id="L1028">		String[] title = { &quot;Time&quot;, &quot;Type&quot;, &quot;Option&quot;, &quot;Message&quot;, &quot;Result&quot; };</span>
+<span class="nc" id="L1029">		Object[][] content = new Object[list.size()][5];</span>
+<span class="nc bnc" id="L1030" title="All 2 branches missed.">		for (int i = 0; i &lt; list.size(); i++)</span>
+<span class="nc" id="L1031">			content[i] = list.get(i);</span>
+<span class="nc" id="L1032">		board.visualize(content, title, &quot;log&quot;);</span>
+<span class="nc" id="L1033">	}</span>
+
+	/**
+	 * 主程序
+	 * 
+	 * @throws IOException
+	 * @throws SecurityException
+	 */
+	public static void main(String[] args) throws SecurityException, IOException {
+<span class="nc" id="L1042">		new FlightScheduleApp();</span>
+<span class="nc" id="L1043">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

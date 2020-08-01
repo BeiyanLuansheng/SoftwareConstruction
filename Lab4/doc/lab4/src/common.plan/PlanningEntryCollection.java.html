@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>PlanningEntryCollection.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.plan</a> &gt; <span class="el_source">PlanningEntryCollection.java</span></div><h1>PlanningEntryCollection.java</h1><pre class="source lang-java linenums">package common.plan;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * 一个mutable的类，PlanningEntry的集合类
+ * 
+ * @param &lt;R&gt; 资源类型
+ */
+<span class="pc bpc" id="L13" title="1 of 2 branches missed.">public class PlanningEntryCollection&lt;R&gt; {</span>
+
+<span class="fc" id="L15">	private final List&lt;PlanningEntry&lt;R&gt;&gt; entries = new ArrayList&lt;&gt;();</span>
+
+	// Abstraction function:
+	// AF(entries)=现实中的计划项清单
+	// Representation invariant:
+	// entries!=null
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的用final限定
+	// 获得entries时使用Collections.unmodifiableList()转化为不可更改的list返回
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L29" title="2 of 4 branches missed.">		assert this.entries != null;</span>
+<span class="fc" id="L30">	}</span>
+
+	/**
+	 * 增加一条计划项
+	 * 
+	 * @param entry 待增加的计划项
+	 * @return false 添加失败，计划项为空 true 添加成功
+	 */
+	public boolean addEntries(PlanningEntry&lt;R&gt; entry) {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">		if (entry == null)</span>
+<span class="fc" id="L40">			return false;</span>
+<span class="fc" id="L41">		entries.add(entry);</span>
+<span class="fc" id="L42">		checkRep();</span>
+<span class="fc" id="L43">		return true;</span>
+	}
+
+	/**
+	 * 获得所有的计划项列表
+	 * 
+	 * @return 计划项列表
+	 */
+	public List&lt;PlanningEntry&lt;R&gt;&gt; getEntries() {
+<span class="fc" id="L52">		checkRep();</span>
+<span class="fc" id="L53">		return Collections.unmodifiableList(entries);</span>
+	}
+
+	/**
+	 * 计划项迭代器
+	 * 
+	 * @return 迭代器
+	 */
+	public Iterator&lt;PlanningEntry&lt;R&gt;&gt; iterator() {
+<span class="fc" id="L62">		checkRep();</span>
+<span class="fc" id="L63">		return entries.iterator();</span>
+	}
+
+	/**
+	 * 把计划项按开始时间从早到晚排序
+	 */
+	public void sort() {
+<span class="fc" id="L70">		entries.sort(null);</span>
+<span class="fc" id="L71">		checkRep();</span>
+<span class="fc" id="L72">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

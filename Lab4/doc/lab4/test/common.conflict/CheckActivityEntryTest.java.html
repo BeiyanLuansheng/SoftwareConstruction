@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>CheckActivityEntryTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">common.conflict</a> &gt; <span class="el_source">CheckActivityEntryTest.java</span></div><h1>CheckActivityEntryTest.java</h1><pre class="source lang-java linenums">package common.conflict;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
+import activity.ActivityEntry;
+import activity.Material;
+import common.location.Location;
+import common.plan.PlanningEntry;
+
+<span class="fc" id="L15">public class CheckActivityEntryTest {</span>
+
+	// Test strategy
+	// 测试checkLocationConflict()
+	// 计划项列表中没有计划项，计划项列表只有一个计划项，计划项列表中至少有两个计划项
+	// 计划项中不存在冲突，计划项中存在冲突
+
+	// tests for CheckActivityEntryPlanA.checkLocationConflict()
+	@Test
+	public void testCheckLocationConflictPlanA() {
+<span class="fc" id="L25">		CheckActivityEntry&lt;Material&gt; caec = new CheckActivityEntryPlanA&lt;&gt;();</span>
+<span class="fc" id="L26">		List&lt;PlanningEntry&lt;Material&gt;&gt; activityEntries = new ArrayList&lt;&gt;();</span>
+		// 空计划项列表
+<span class="fc" id="L28">		assertFalse(caec.checkLocationConflict(null));</span>
+		// 没有计划项但不空的列表
+<span class="fc" id="L30">		assertFalse(caec.checkLocationConflict(activityEntries));</span>
+		// 只有一个计划项的列表
+<span class="fc" id="L32">		PlanningEntry&lt;Material&gt; pe = PlanningEntry.activityEntry(&quot;A1&quot;, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L33">		Location location = new Location(&quot;place&quot;, false);</span>
+<span class="fc" id="L34">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L35">		activityEntries.add(pe);</span>
+<span class="fc" id="L36">		assertFalse(caec.checkLocationConflict(activityEntries));</span>
+		// 不存在冲突的至少两个计划项的列表
+<span class="fc" id="L38">		pe = PlanningEntry.activityEntry(&quot;B2&quot;, &quot;2020-04-26 12:00&quot;, &quot;2020-04-26 13:00&quot;);</span>
+<span class="fc" id="L39">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L40">		activityEntries.add(pe);</span>
+<span class="fc" id="L41">		assertFalse(caec.checkLocationConflict(activityEntries));</span>
+		// 存在冲突的至少两个计划项的列表
+<span class="fc" id="L43">		pe = PlanningEntry.activityEntry(&quot;C3&quot;, &quot;2020-04-26 11:00&quot;, &quot;2020-04-26 13:00&quot;);</span>
+<span class="fc" id="L44">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L45">		activityEntries.add(pe);</span>
+<span class="fc" id="L46">		assertTrue(caec.checkLocationConflict(activityEntries));</span>
+<span class="fc" id="L47">	}</span>
+
+	// tests for CheckActivityEntryPlanB.checkLocationConflict()
+	@Test
+	public void testCheckLocationConflictPlanB() {
+<span class="fc" id="L52">		CheckActivityEntry&lt;Material&gt; caec = new CheckActivityEntryPlanB&lt;&gt;();</span>
+<span class="fc" id="L53">		List&lt;PlanningEntry&lt;Material&gt;&gt; activityEntries = new ArrayList&lt;&gt;();</span>
+		// 空计划项列表
+<span class="fc" id="L55">		assertFalse(caec.checkLocationConflict(null));</span>
+		// 没有计划项但不空的列表
+<span class="fc" id="L57">		assertFalse(caec.checkLocationConflict(activityEntries));</span>
+		// 只有一个计划项的列表
+<span class="fc" id="L59">		PlanningEntry&lt;Material&gt; pe = PlanningEntry.activityEntry(&quot;A1&quot;, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L60">		Location location = new Location(&quot;place&quot;, false);</span>
+<span class="fc" id="L61">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L62">		activityEntries.add(pe);</span>
+<span class="fc" id="L63">		assertFalse(caec.checkLocationConflict(activityEntries));</span>
+		// 不存在冲突的至少两个计划项的列表
+<span class="fc" id="L65">		pe = PlanningEntry.activityEntry(&quot;B2&quot;, &quot;2020-04-26 12:00&quot;, &quot;2020-04-26 13:00&quot;);</span>
+<span class="fc" id="L66">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L67">		activityEntries.add(pe);</span>
+<span class="fc" id="L68">		assertFalse(caec.checkLocationConflict(activityEntries));</span>
+		// 存在冲突的至少两个计划项的列表
+<span class="fc" id="L70">		pe = PlanningEntry.activityEntry(&quot;C3&quot;, &quot;2020-04-26 11:00&quot;, &quot;2020-04-26 13:00&quot;);</span>
+<span class="fc" id="L71">		((ActivityEntry&lt;Material&gt;) pe).setLocation(location);</span>
+<span class="fc" id="L72">		activityEntries.add(pe);</span>
+<span class="fc" id="L73">		assertTrue(caec.checkLocationConflict(activityEntries));</span>
+<span class="fc" id="L74">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

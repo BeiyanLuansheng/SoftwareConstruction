@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>PlanningEntry.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.plan</a> &gt; <span class="el_source">PlanningEntry.java</span></div><h1>PlanningEntry.java</h1><pre class="source lang-java linenums">package common.plan;
+
+import java.util.List;
+
+import activity.ActivityEntry;
+import common.location.Location;
+import common.location.ModifiableSingleLocation;
+import common.location.ModifiableSingleLocationEntry;
+import common.location.MultipleLocation;
+import common.location.MultipleLocationEntry;
+import common.location.TwoLocation;
+import common.location.TwoLocationEntry;
+import common.time.PresetMultipleTimeslot;
+import common.time.PresetMultipleTimeslotEntry;
+import common.time.PresetSingleTimeslot;
+import common.time.PresetSingleTimeslotEntry;
+import flight.FlightEntry;
+import train.TrainEntry;
+
+/**
+ * 表示一个计划项
+ * 
+ * @param &lt;R&gt; 计划项使用的资源的类型
+ */
+public interface PlanningEntry&lt;R&gt; extends Comparable&lt;PlanningEntry&lt;R&gt;&gt; {
+
+	/**
+	 * 创建航班计划项
+	 * 
+	 * @param &lt;R&gt;       资源类型
+	 * @param name      项目名，非空
+	 * @param departure 出发地点，非空
+	 * @param arrival   目的地点，非空
+	 * @param start     出发时间，非空，格式为yyyy-MM-dd HH:mm
+	 * @param end       到达时间，非空，格式为yyyy-MM-dd HH:mm
+	 * @return 一个新的航班计划项
+	 */
+	public static &lt;R&gt; PlanningEntry&lt;R&gt; flightEntry(String name, Location departure, Location arrival, String start,
+			String end) {
+<span class="fc" id="L40">		TwoLocationEntry twoLocations = new TwoLocation(departure, arrival);</span>
+<span class="fc" id="L41">		PresetSingleTimeslotEntry oneTimeslot = new PresetSingleTimeslot(start, end);</span>
+<span class="fc" id="L42">		return new FlightEntry&lt;&gt;(name, twoLocations, oneTimeslot);</span>
+	}
+
+	/**
+	 * 创建高铁车次计划项
+	 * 
+	 * @param &lt;R&gt;          资源类型
+	 * @param name         项目名，非空
+	 * @param locationList 位置列表，非空
+	 * @param times        时刻列表，非空，格式为yyyy-MM-dd HH:mm
+	 * @return 一个新的高铁车次计划项
+	 */
+	public static &lt;R&gt; PlanningEntry&lt;R&gt; trainEntry(String name, List&lt;Location&gt; locationList, List&lt;String&gt; times) {
+<span class="fc" id="L55">		MultipleLocationEntry locations = new MultipleLocation(locationList);</span>
+<span class="fc" id="L56">		PresetMultipleTimeslotEntry timeslot = new PresetMultipleTimeslot(times);</span>
+<span class="fc" id="L57">		return new TrainEntry&lt;&gt;(name, locations, timeslot);</span>
+	}
+
+	/**
+	 * 创建学习活动计划项
+	 * 
+	 * @param &lt;R&gt;   资源类型
+	 * @param name  项目名，非空
+	 * @param start 开始时间，非空，格式为yyyy-MM-dd HH:mm
+	 * @param end   结束时间，非空，格式为yyyy-MM-dd HH:mm
+	 * @return 一个新的学习活动计划项
+	 */
+	public static &lt;R&gt; PlanningEntry&lt;R&gt; activityEntry(String name, String start, String end) {
+<span class="fc" id="L70">		ModifiableSingleLocationEntry modifiableLocation = new ModifiableSingleLocation();</span>
+<span class="fc" id="L71">		PresetSingleTimeslotEntry timeslot = new PresetSingleTimeslot(start, end);</span>
+<span class="fc" id="L72">		return new ActivityEntry&lt;&gt;(name, modifiableLocation, timeslot);</span>
+	}
+
+	/**
+	 * 将状态设置为已分配状态
+	 * 
+	 * @return false 设置失败 true 设置成功
+	 */
+	public boolean allocate();
+
+	/**
+	 * 将状态设置为运行状态
+	 * 
+	 * @return false 设置失败 true 设置成功
+	 */
+	public boolean running();
+
+	/**
+	 * 将状态设置为已取消状态
+	 * 
+	 * @return false 设置失败 true 设置成功
+	 */
+	public boolean cancel();
+
+	/**
+	 * 将状态设置为完成状态
+	 * 
+	 * @return false 设置失败 true 设置成功
+	 */
+	public boolean end();
+
+	/**
+	 * 获取计划项的名字
+	 * 
+	 * @return 表示名字的字符串
+	 */
+	public String getName();
+
+	/**
+	 * 获得计划项状态
+	 * 
+	 * @return 表示状态的字符串
+	 */
+	public String getState();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

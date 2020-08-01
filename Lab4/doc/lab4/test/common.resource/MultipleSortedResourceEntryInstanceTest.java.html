@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MultipleSortedResourceEntryInstanceTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">common.resource</a> &gt; <span class="el_source">MultipleSortedResourceEntryInstanceTest.java</span></div><h1>MultipleSortedResourceEntryInstanceTest.java</h1><pre class="source lang-java linenums">package common.resource;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
+import train.Carriage;
+
+<span class="fc" id="L12">public abstract class MultipleSortedResourceEntryInstanceTest {</span>
+
+	// Test strategy
+	// 测试getResources()
+	// 测试返回的资源是否与期望的相等
+
+	/**
+	 * 创建一个资源列表
+	 * @param train 资源列表
+	 * @return 一个有序的资源列表
+	 */
+	public abstract MultipleSortedResourceEntry&lt;Carriage&gt; createMSRE(List&lt;Carriage&gt; train);
+
+	@Test
+	public void testGetResources() {
+<span class="fc" id="L27">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L28">		train.add(new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020));</span>
+<span class="fc" id="L29">		train.add(new Carriage(2, &quot;ErDengZuo&quot;, 100, 2020));</span>
+<span class="fc" id="L30">		MultipleSortedResourceEntry&lt;Carriage&gt; msre = createMSRE(train);</span>
+<span class="fc" id="L31">		assertEquals(train, msre.getResources());</span>
+<span class="fc" id="L32">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

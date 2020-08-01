@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MaterialTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">activity</a> &gt; <span class="el_source">MaterialTest.java</span></div><h1>MaterialTest.java</h1><pre class="source lang-java linenums">package activity;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+<span class="fc" id="L7">public class MaterialTest {</span>
+
+	// Test strategy
+	// 测试getName()
+	// 测试返回的名字与期望是否相同
+	// 测试getDepartment()
+	// 测试返回的名字与期望是否相同
+	// 测试getDate()
+	// 测试返回的时间与期望是否相同
+	// 测试equals()
+	// 相同的资源，不同的资源
+
+<span class="fc" id="L19">	Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+
+	@Test
+	public void testGetName() {
+<span class="fc" id="L23">		assertEquals(&quot;material&quot;, material.getName());</span>
+<span class="fc" id="L24">	}</span>
+
+	@Test
+	public void testGetDepartment() {
+<span class="fc" id="L28">		assertEquals(&quot;Learning department&quot;, material.getDepartment());</span>
+<span class="fc" id="L29">	}</span>
+
+	@Test
+	public void testGetDate() {
+<span class="fc" id="L33">		assertEquals(&quot;2020-04-26&quot;, material.getDate());</span>
+<span class="fc" id="L34">	}</span>
+
+	@Test
+	public void testEquals() {
+		//相同的资源
+<span class="fc" id="L39">		Material same = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L40">		assertTrue(material.equals(same));</span>
+		//不同的资源
+<span class="fc" id="L42">		Material different = new Material(&quot;different&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L43">		assertFalse(material.equals(different));</span>
+<span class="fc" id="L44">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

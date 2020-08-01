@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>PresetSingleTimeslotEntryInstanceTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">common.time</a> &gt; <span class="el_source">PresetSingleTimeslotEntryInstanceTest.java</span></div><h1>PresetSingleTimeslotEntryInstanceTest.java</h1><pre class="source lang-java linenums">package common.time;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+<span class="fc" id="L7">public abstract class PresetSingleTimeslotEntryInstanceTest {</span>
+
+	// Test strategy
+	// 测试getTImeslot()
+	// 测试返回的时间表是否和预期的相等
+
+	/**
+	 * 创建一个有单个时间段的时刻表
+	 * @param start 开始时间
+	 * @param end 结束时间
+	 * @return 一个有单个时间段的时刻表
+	 */
+	public abstract PresetSingleTimeslotEntry createPSTE(String start, String end);
+
+	@Test
+	public void testGetTImeslot() {
+<span class="fc" id="L23">		String start = &quot;2020-04-27 14:00&quot;;</span>
+<span class="fc" id="L24">		String end = &quot;2020-04-27 15:00&quot;;</span>
+<span class="fc" id="L25">		PresetSingleTimeslotEntry pste = createPSTE(start, end);</span>
+<span class="fc" id="L26">		assertEquals(new Timeslot(start, end), pste.getTimeslot());</span>
+<span class="fc" id="L27">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>Board.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">train</a> &gt; <span class="el_source">Board.java</span></div><h1>Board.java</h1><pre class="source lang-java linenums">package train;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.plan.PlanningEntryCollection;
+
+/**
+ * 一个mutable的类型，表示计划项清单
+ */
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">public class Board&lt;R&gt; {</span>
+
+<span class="fc" id="L26">	private final PlanningEntryCollection&lt;R&gt; trainEntries = new PlanningEntryCollection&lt;&gt;();</span>
+
+	// Abstraction function:
+	// AF(trainEntries)=现实中的高铁车次计划项清单
+	// Representation invariant:
+	// trainEntries!=null
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的用final限定
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep(){
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">		assert trainEntries != null;</span>
+<span class="fc" id="L40">	}</span>
+
+	/**
+	 * 计划项清单迭代器
+	 * 
+	 * @return 迭代器
+	 */
+	public Iterator&lt;PlanningEntry&lt;R&gt;&gt; iterator() {
+<span class="fc" id="L48">		checkRep();</span>
+<span class="fc" id="L49">		return trainEntries.iterator();</span>
+	}
+
+	/**
+	 * 添加计划项
+	 * 
+	 * @param trainEntry 待添加的计划项
+	 * @return false，添加失败，计划项为空 true，添加成功
+	 */
+	public boolean addTrainEntry(PlanningEntry&lt;R&gt; trainEntry) {
+<span class="fc" id="L59">		checkRep();</span>
+<span class="fc" id="L60">		return trainEntries.addEntries(trainEntry);</span>
+	}
+
+	
+	/**
+	 * 获得计划项清单
+	 * 
+	 * @return 计划项列表
+	 */
+	public List&lt;PlanningEntry&lt;R&gt;&gt; getTrainEntries() {
+<span class="fc" id="L70">		checkRep();</span>
+<span class="fc" id="L71">		return trainEntries.getEntries();</span>
+	}
+
+	/**
+	 * 显示某位置，某时刻前后一小时内的所有计划项
+	 * 
+	 * @param loc  位置
+	 * @param time 时间，格式yyyy-MM-dd HH:mm
+	 */
+	public void allEntryAtLocation(Location loc, String time) {
+		//不满足前置条件，抛出异常
+<span class="nc bnc" id="L82" title="All 6 branches missed.">		if(loc == null || time == null || !time.matches(&quot;\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}&quot;))</span>
+<span class="nc" id="L83">			throw new IllegalArgumentException(&quot;参数不合法&quot;);</span>
+<span class="nc" id="L84">		checkRep();</span>
+<span class="nc" id="L85">		DateTimeFormatter df = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+<span class="nc" id="L86">		LocalDateTime from = LocalDateTime.parse(time, df).plusHours(-1);</span>
+<span class="nc" id="L87">		LocalDateTime to = LocalDateTime.parse(time, df).plusHours(1);</span>
+
+<span class="nc" id="L89">		List&lt;String[]&gt; arrivalList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L90">		List&lt;String[]&gt; departureList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L91">		trainEntries.sort();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		for (PlanningEntry&lt;R&gt; pe : trainEntries.getEntries()) {</span>
+<span class="nc" id="L93">			TrainEntry&lt;R&gt; te = (TrainEntry&lt;R&gt;) pe;</span>
+<span class="nc" id="L94">			List&lt;Location&gt; locations = te.getLocations();</span>
+<span class="nc" id="L95">			LocalDateTime start = te.getTimeslot().get(0).getStartTime();</span>
+<span class="nc" id="L96">			LocalDateTime end = te.getTimeslot().get(te.getTimeslot().size() - 1).getEndTime();</span>
+<span class="nc bnc" id="L97" title="All 6 branches missed.">			if (locations.get(0).equals(loc) &amp;&amp; start.isAfter(from) &amp;&amp; start.isBefore(to)) {</span>
+<span class="nc" id="L98">				String[] str = { start.toString(), te.getName(),</span>
+<span class="nc" id="L99">						locations.get(0).getName() + &quot;-&gt;&quot; + locations.get(locations.size() - 1).getName(),</span>
+<span class="nc" id="L100">						te.getState() };</span>
+<span class="nc" id="L101">				departureList.add(str);</span>
+<span class="nc bnc" id="L102" title="All 6 branches missed.">			} else if (locations.get(locations.size() - 1).equals(loc) &amp;&amp; end.isAfter(from) &amp;&amp; end.isBefore(to)) {</span>
+<span class="nc" id="L103">				String[] str = { end.toString(), te.getName(),</span>
+<span class="nc" id="L104">						locations.get(0).getName() + &quot;-&gt;&quot; + locations.get(locations.size() - 1).getName(),</span>
+<span class="nc" id="L105">						te.getState() };</span>
+<span class="nc" id="L106">				arrivalList.add(str);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			} else if (locations.contains(loc)) {</span>
+<span class="nc" id="L108">				int index = locations.indexOf(loc);</span>
+<span class="nc" id="L109">				LocalDateTime arrival = te.getTimeslot().get(index - 1).getEndTime();</span>
+<span class="nc" id="L110">				LocalDateTime departure = te.getTimeslot().get(index).getStartTime();</span>
+<span class="nc bnc" id="L111" title="All 4 branches missed.">				if (arrival.isAfter(from) &amp;&amp; arrival.isBefore(to)) {</span>
+<span class="nc" id="L112">					String[] arrivalStr = { arrival.toString(), te.getName(),</span>
+<span class="nc" id="L113">							locations.get(0).getName() + &quot;-&gt;&quot; + locations.get(locations.size() - 1).getName(),</span>
+<span class="nc" id="L114">							te.getState() };</span>
+<span class="nc" id="L115">					arrivalList.add(arrivalStr);</span>
+				}
+<span class="nc bnc" id="L117" title="All 4 branches missed.">				if (departure.isAfter(from) &amp;&amp; departure.isBefore(to)) {</span>
+<span class="nc" id="L118">					String[] departureStr = { departure.toString(), te.getName(),</span>
+<span class="nc" id="L119">							locations.get(0).getName() + &quot;-&gt;&quot; + locations.get(locations.size() - 1).getName(),</span>
+<span class="nc" id="L120">							te.getState() };</span>
+<span class="nc" id="L121">					departureList.add(departureStr);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L126">		Object[][] departure = new Object[departureList.size()][4];</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		for (int i = 0; i &lt; departureList.size(); i++) {</span>
+<span class="nc" id="L128">			departure[i] = departureList.get(i);</span>
+		}
+<span class="nc" id="L130">		Object[][] arrival = new Object[arrivalList.size()][4];</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		for (int i = 0; i &lt; arrivalList.size(); i++) {</span>
+<span class="nc" id="L132">			arrival[i] = arrivalList.get(i);</span>
+		}
+<span class="nc" id="L134">		String[] title1 = { &quot;Departure Time&quot;, &quot;Entry&quot;, &quot;From-&gt;To&quot;, &quot;State&quot; };</span>
+<span class="nc" id="L135">		String[] title2 = { &quot;Arrival Time&quot;, &quot;Entry&quot;, &quot;From-&gt;To&quot;, &quot;State&quot; };</span>
+<span class="nc" id="L136">		visualize(departure, title1, time + &quot;,&quot; + loc.getName() + &quot; DepartureTable&quot;);</span>
+<span class="nc" id="L137">		visualize(arrival, title2, time + &quot;,&quot; + loc.getName() + &quot; ArrivalTable&quot;);</span>
+<span class="nc" id="L138">	}</span>
+
+	/**
+	 * 表格内容面板
+	 * 
+	 * @param content    待显示的内容
+	 * @param title      表格第一行的标题
+	 * @param windowName 窗口的标题
+	 */
+	public void visualize(Object[][] content, String[] title, String windowName) {
+<span class="nc bnc" id="L148" title="All 4 branches missed.">		if(content.length != 0 &amp;&amp; content[0].length != title.length) //当content的列数和title的列数不同时抛出异常</span>
+<span class="nc" id="L149">			throw new IllegalArgumentException(&quot;内容和标题的列数不一样&quot;);</span>
+<span class="nc" id="L150">		JFrame frame = new JFrame();</span>
+<span class="nc" id="L151">		JTable table = new JTable(content, title);</span>
+<span class="nc" id="L152">		table.setPreferredScrollableViewportSize(new Dimension(500, 500));</span>
+<span class="nc" id="L153">		JScrollPane scrollPane = new JScrollPane(table);</span>
+<span class="nc" id="L154">		frame.getContentPane().add(scrollPane, BorderLayout.CENTER);</span>
+<span class="nc" id="L155">		frame.setTitle(windowName);</span>
+<span class="nc" id="L156">		frame.pack();</span>
+<span class="nc" id="L157">		frame.setVisible(true);</span>
+<span class="nc" id="L158">		frame.addWindowListener(new WindowAdapter() {</span>
+			@Override
+			public void windowClosing(WindowEvent e) {
+<span class="nc" id="L161">				frame.setVisible(false);</span>
+<span class="nc" id="L162">			}</span>
+		});
+<span class="nc" id="L164">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

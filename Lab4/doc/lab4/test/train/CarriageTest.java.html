@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>CarriageTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">train</a> &gt; <span class="el_source">CarriageTest.java</span></div><h1>CarriageTest.java</h1><pre class="source lang-java linenums">package train;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+<span class="fc" id="L7">public class CarriageTest {</span>
+
+	// Test strategy
+	// 测试getID()
+	// 测试得到的编号是否和预期的相等
+	// 测试getType()
+	// 测试得到的类型是否和预期的相同
+	// 测试getSeats()
+	// 测试得到的座位数是否和预期的相等
+	// 测试getAge()
+	// 测试得到的生产年份是否和预期的相等
+	// 测试equals()
+	// 两车厢是同一车厢，两车厢不是同一个车厢
+	
+	@Test
+	public void testGetID() {
+<span class="fc" id="L23">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L24">		assertEquals(1, carriage.getID());</span>
+<span class="fc" id="L25">	}</span>
+
+	@Test
+	public void testGetType() {
+<span class="fc" id="L29">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L30">		assertEquals(&quot;ErDengZuo&quot;, carriage.getType());</span>
+<span class="fc" id="L31">	}</span>
+
+	@Test
+	public void testGetSeats() {
+<span class="fc" id="L35">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L36">		assertEquals(100, carriage.getSeats());</span>
+<span class="fc" id="L37">	}</span>
+
+	@Test
+	public void testGetAge() {
+<span class="fc" id="L41">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L42">		assertEquals(2020, carriage.getManufactureYear());</span>
+<span class="fc" id="L43">	}</span>
+
+	@Test
+	public void testEquals() {
+<span class="fc" id="L47">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+		//两车厢是同一车厢
+<span class="fc" id="L49">		Carriage same = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L50">		assertTrue(carriage.equals(same));</span>
+		//两车厢不是同一个车厢
+<span class="fc" id="L52">		Carriage different = new Carriage(2, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L53">		assertFalse(carriage.equals(different));</span>
+<span class="fc" id="L54">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

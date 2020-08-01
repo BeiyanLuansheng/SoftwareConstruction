@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>Location.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.location</a> &gt; <span class="el_source">Location.java</span></div><h1>Location.java</h1><pre class="source lang-java linenums">package common.location;
+
+/**
+ * 一个immutable的类型，表示位置
+ */
+<span class="pc bpc" id="L6" title="1 of 2 branches missed.">public class Location {</span>
+	private final String name;
+	private final boolean sharable;
+	private final double longitude;
+	private final double latitude;
+
+	// Abstraction function:
+	// AF(name, sharable)=以name为名称，是否可共享为sharable的位置
+	// AF(name, sharable, longitude,latitude)=以name为名称，
+	// 是否可共享为sharable，东经longitude，北纬latitude的位置
+	// Representation invariant:
+	// longitude&gt;=0 &amp;&amp; longitude&lt;=180
+	// latitude&gt;=0 &amp;&amp; latitude&lt;=90
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+
+	/**
+	 * 创建一个位置
+	 * 
+	 * @param place    位置的名字,非空
+	 * @param sharable 位置是否可共享，true为可共享，false为不可共享
+	 */
+<span class="fc" id="L28">	public Location(String place, boolean sharable) {</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">		if (place == null) // place参数不满足非空条件，抛出异常</span>
+<span class="fc" id="L30">			throw new IllegalArgumentException(&quot;地名为空&quot;);</span>
+<span class="fc" id="L31">		this.name = place;</span>
+<span class="fc" id="L32">		this.sharable = sharable;</span>
+<span class="fc" id="L33">		this.latitude = 0;</span>
+<span class="fc" id="L34">		this.longitude = 0;</span>
+<span class="fc" id="L35">		checkRep();</span>
+<span class="fc" id="L36">	}</span>
+
+	/**
+	 * 创建一个位置
+	 * 
+	 * @param place     位置的名字，非空
+	 * @param sharable  位置是否可共享，true为可共享，false为不可共享
+	 * @param longitude 东经经度
+	 * @param latitude  北纬纬度
+	 */
+<span class="fc" id="L46">	public Location(String place, boolean sharable, double longitude, double latitude) {</span>
+		// 参数不满足前置条件，抛出异常
+<span class="fc bfc" id="L48" title="All 2 branches covered.">		if (place == null)</span>
+<span class="fc" id="L49">			throw new IllegalArgumentException(&quot;地名为空&quot;);</span>
+<span class="pc bpc" id="L50" title="2 of 8 branches missed.">		if (longitude &lt; 0 || longitude &gt; 180 || latitude &lt; 0 || latitude &gt; 90)</span>
+<span class="fc" id="L51">			throw new IllegalArgumentException(&quot;经纬度不合法&quot;);</span>
+<span class="fc" id="L52">		this.name = place;</span>
+<span class="fc" id="L53">		this.sharable = sharable;</span>
+<span class="fc" id="L54">		this.latitude = latitude;</span>
+<span class="fc" id="L55">		this.longitude = longitude;</span>
+<span class="fc" id="L56">		checkRep();</span>
+<span class="fc" id="L57">	}</span>
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L63" title="2 of 4 branches missed.">		assert this.name != null;</span>
+<span class="pc bpc" id="L64" title="3 of 6 branches missed.">		assert this.longitude &gt;= 0 &amp;&amp; this.longitude &lt;= 180;</span>
+<span class="pc bpc" id="L65" title="3 of 6 branches missed.">		assert this.latitude &gt;= 0 &amp;&amp; this.latitude &lt;= 90;</span>
+<span class="fc" id="L66">	}</span>
+
+	/**
+	 * 获得位置的名字
+	 * 
+	 * @return 一个非空字符串，表示返回地名
+	 */
+	public String getName() {
+<span class="fc" id="L74">		checkRep();</span>
+<span class="fc" id="L75">		return name;</span>
+	}
+
+	/**
+	 * 地点是否为可共享的
+	 * 
+	 * @return true 地点是可共享的 false 不可共享
+	 */
+	public boolean isSharable() {
+<span class="fc" id="L84">		checkRep();</span>
+<span class="fc" id="L85">		return sharable;</span>
+	}
+
+	/**
+	 * 获得经度
+	 * 
+	 * @return 一个浮点数，表示东经经度
+	 */
+	public double getLongitude() {
+<span class="fc" id="L94">		checkRep();</span>
+<span class="fc" id="L95">		return longitude;</span>
+	}
+
+	/**
+	 * 获得纬度
+	 * 
+	 * @return 一个浮点数，表示北纬纬度
+	 */
+	public double getLatitude() {
+<span class="fc" id="L104">		checkRep();</span>
+<span class="fc" id="L105">		return latitude;</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="fc" id="L110">		return name.hashCode();</span>
+	}
+
+	@Override
+	public boolean equals(Object location) {
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">		if (location instanceof Location) {</span>
+<span class="fc" id="L116">			Location loc = (Location) location;</span>
+<span class="pc bpc" id="L117" title="2 of 6 branches missed.">			if (this.name.equals(loc.getName()) &amp;&amp; this.sharable == loc.isSharable() &amp;&amp; this.longitude == loc.longitude</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">					&amp;&amp; this.latitude == loc.latitude)</span>
+<span class="fc" id="L119">				return true;</span>
+		}
+<span class="fc" id="L121">		return false;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

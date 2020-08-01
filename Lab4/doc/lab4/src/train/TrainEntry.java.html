@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>TrainEntry.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">train</a> &gt; <span class="el_source">TrainEntry.java</span></div><h1>TrainEntry.java</h1><pre class="source lang-java linenums">package train;
+
+import java.util.List;
+
+import common.block.BlockableEntry;
+import common.location.Location;
+import common.location.MultipleLocationEntry;
+import common.plan.CommonPlanningEntry;
+import common.plan.PlanningEntry;
+import common.resource.MultipleSortedResource;
+import common.resource.MultipleSortedResourceEntry;
+import common.time.PresetMultipleTimeslotEntry;
+import common.time.Timeslot;
+
+/**
+ * 代表一个表示高铁车次计划项
+ * 
+ * @param &lt;R&gt; 资源类型
+ */
+<span class="pc bpc" id="L20" title="1 of 2 branches missed.">public class TrainEntry&lt;R&gt; extends CommonPlanningEntry&lt;R&gt;</span>
+		implements MultipleLocationEntry, PresetMultipleTimeslotEntry, MultipleSortedResourceEntry&lt;R&gt;, BlockableEntry {
+
+	private final MultipleLocationEntry locations;
+	private final PresetMultipleTimeslotEntry timeslot;
+	private MultipleSortedResourceEntry&lt;R&gt; train;
+
+	// Abstraction function:
+	// AF(locations, timeslot, train)=一个以timeslot为时刻表，
+	// 经过locations中的车站，使用train中的车厢资源的高铁车次
+	// Representation invariant:
+	// locations!=null
+	// timeslot!=null
+	// 时刻表的数量比车站数量少1
+	// locations.getLocations().size() == timeslot.getTimeslot().size()+1
+	// Safety from rep exposure:
+	// locations,timeslot数据域都是私有的用final限定
+	// train是私有的
+
+	/**
+	 * 创建一个高铁车次计划项
+	 * 
+	 * @param name      车次的名称，非空
+	 * @param locations 本车次经过的位置，非空
+	 * @param timeslot  本车次的时刻表，非空，时刻表的数量比车站数量少1
+	 */
+	public TrainEntry(String name, MultipleLocationEntry locations, PresetMultipleTimeslotEntry timeslot) {
+<span class="fc" id="L47">		super(name);</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">		if (locations == null || timeslot == null</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">				|| locations.getLocations().size() != timeslot.getTimeslot().size() + 1)</span>
+<span class="nc" id="L50">			throw new IllegalArgumentException(&quot;参数不合法&quot;);</span>
+<span class="fc" id="L51">		this.locations = locations;</span>
+<span class="fc" id="L52">		this.timeslot = timeslot;</span>
+<span class="fc" id="L53">		checkRep();</span>
+<span class="fc" id="L54">	}</span>
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L60" title="2 of 4 branches missed.">		assert this.locations != null;</span>
+<span class="pc bpc" id="L61" title="2 of 4 branches missed.">		assert this.timeslot != null;</span>
+<span class="pc bpc" id="L62" title="2 of 4 branches missed.">		assert this.locations.getLocations().size() == this.timeslot.getTimeslot().size() + 1;</span>
+<span class="fc" id="L63">	}</span>
+
+	/**
+	 * 为本车次分配资源
+	 * 
+	 * @param train 待分配的资源，非空
+	 * @return false 分配失败 true 分配成功
+	 */
+	public boolean allocateTrain(List&lt;R&gt; train) {
+		// 不满足前置条件，抛出异常
+<span class="pc bpc" id="L73" title="2 of 4 branches missed.">		if (train == null || train.size() == 0)</span>
+<span class="nc" id="L74">			throw new IllegalArgumentException(&quot;空资源&quot;);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">		if (super.allocate()) {</span>
+<span class="fc" id="L76">			this.train = new MultipleSortedResource&lt;&gt;(train);</span>
+<span class="pc bpc" id="L77" title="2 of 4 branches missed.">			assert getState().equals(&quot;ALLOCATED&quot;); // 确保是已分配状态</span>
+<span class="pc bpc" id="L78" title="2 of 4 branches missed.">			assert this.train != null;</span>
+<span class="fc" id="L79">			checkRep();</span>
+<span class="fc" id="L80">			return true;</span>
+		}
+<span class="fc" id="L82">		checkRep();</span>
+<span class="fc" id="L83">		return false;</span>
+	}
+
+	@Override
+	public List&lt;Location&gt; getLocations() {
+<span class="fc" id="L88">		checkRep();</span>
+<span class="fc" id="L89">		return locations.getLocations();</span>
+	}
+
+	@Override
+	public List&lt;R&gt; getResources() {
+<span class="fc" id="L94">		checkRep();</span>
+<span class="fc" id="L95">		return train.getResources();</span>
+	}
+
+	@Override
+	public List&lt;Timeslot&gt; getTimeslot() {
+<span class="fc" id="L100">		checkRep();</span>
+<span class="fc" id="L101">		return this.timeslot.getTimeslot();</span>
+	}
+
+	@Override
+	public boolean block() {
+<span class="fc" id="L106">		state = state.nextState(&quot;BLOCKED&quot;);</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">		if (state.state().equals(&quot;BLOCKED&quot;))</span>
+<span class="fc" id="L108">			return true;</span>
+<span class="fc" id="L109">		return false;</span>
+	}
+
+	@Override
+	public int compareTo(PlanningEntry&lt;R&gt; entry) {
+<span class="fc" id="L114">		TrainEntry&lt;R&gt; te = (TrainEntry&lt;R&gt;) entry;</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">		if (this.getTimeslot().get(0).getStartTime().isBefore(te.getTimeslot().get(0).getStartTime()))</span>
+<span class="fc" id="L116">			return -1; // this在entry之前开始</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">		else if (this.getTimeslot().get(0).getStartTime().isAfter(te.getTimeslot().get(0).getStartTime()))</span>
+<span class="fc" id="L118">			return 1; // entry在this之前开始</span>
+		else
+<span class="fc" id="L120">			return 0;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

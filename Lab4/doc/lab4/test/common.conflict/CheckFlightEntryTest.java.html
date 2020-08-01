@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>CheckFlightEntryTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">common.conflict</a> &gt; <span class="el_source">CheckFlightEntryTest.java</span></div><h1>CheckFlightEntryTest.java</h1><pre class="source lang-java linenums">package common.conflict;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import flight.FlightEntry;
+import flight.Plane;
+
+<span class="fc" id="L15">public class CheckFlightEntryTest {</span>
+
+	// Test strategy
+	// 测试checkResourceExclusiveConflict()
+	// 计划项列表中没有计划项，计划项列表只有一个计划项，计划项列表中至少有两个计划项
+	// 计划项中不存在冲突，计划项中存在冲突
+	// 测试findPreEntryPerResource()
+	// 存在满足条件的计划项，不存在满足条件的计划项
+
+	//tests for checkResourceExclusiveConflict()
+	@Test
+	public void testCheckResourceExclusConflict() {
+<span class="fc" id="L27">		CheckFlightEntry&lt;Plane&gt; cfec = new CheckFlightEntry&lt;&gt;();</span>
+<span class="fc" id="L28">		List&lt;PlanningEntry&lt;Plane&gt;&gt; flightEntries = new ArrayList&lt;&gt;();</span>
+		//空计划项列表
+<span class="fc" id="L30">		assertFalse(cfec.checkResourceExclusiveConflict(null));</span>
+		//没有计划项但不空的列表
+<span class="fc" id="L32">		assertFalse(cfec.checkResourceExclusiveConflict(flightEntries));</span>
+		//只有一个计划项的列表
+<span class="fc" id="L34">		Location departure = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L35">		Location arrival = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L36">		Plane plane = new Plane(&quot;B6967&quot;, &quot;A370&quot;, 332, 23.7);</span>
+<span class="fc" id="L37">		PlanningEntry&lt;Plane&gt; pe = PlanningEntry.flightEntry(&quot;A1&quot;, departure, arrival, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L38">		((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane);</span>
+<span class="fc" id="L39">		flightEntries.add(pe);</span>
+<span class="fc" id="L40">		assertFalse(cfec.checkResourceExclusiveConflict(flightEntries));</span>
+		//不存在冲突的至少两个计划项的列表
+<span class="fc" id="L42">		pe = PlanningEntry.flightEntry(&quot;B2&quot;, departure, arrival, &quot;2020-04-27 10:00&quot;, &quot;2020-04-27 12:00&quot;);</span>
+<span class="fc" id="L43">		((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane);</span>
+<span class="fc" id="L44">		flightEntries.add(pe);</span>
+<span class="fc" id="L45">		assertFalse(cfec.checkResourceExclusiveConflict(flightEntries));</span>
+		//存在冲突的至少两个计划项的列表
+<span class="fc" id="L47">		pe = PlanningEntry.flightEntry(&quot;C3&quot;, departure, arrival, &quot;2020-04-26 11:00&quot;, &quot;2020-04-27 13:00&quot;);</span>
+<span class="fc" id="L48">		((FlightEntry&lt;Plane&gt;) pe).allocatePlane(plane);</span>
+<span class="fc" id="L49">		flightEntries.add(pe);</span>
+<span class="fc" id="L50">		assertTrue(cfec.checkResourceExclusiveConflict(flightEntries));</span>
+<span class="fc" id="L51">	}</span>
+
+	//tests for findPreEntryPerResource()
+	@Test
+	public void testFindPreEntryPerResource() {
+<span class="fc" id="L56">		CheckFlightEntry&lt;Plane&gt; cfec = new CheckFlightEntry&lt;&gt;();</span>
+<span class="fc" id="L57">		List&lt;PlanningEntry&lt;Plane&gt;&gt; flightEntries = new ArrayList&lt;&gt;();</span>
+		//不存在满足条件的计划项
+<span class="fc" id="L59">		Location departure = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L60">		Location arrival = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L61">		Plane plane = new Plane(&quot;B6967&quot;, &quot;A370&quot;, 332, 23.7);</span>
+<span class="fc" id="L62">		PlanningEntry&lt;Plane&gt; pe1 = PlanningEntry.flightEntry(&quot;A1&quot;, departure, arrival, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L63">		((FlightEntry&lt;Plane&gt;) pe1).allocatePlane(plane);</span>
+<span class="fc" id="L64">		flightEntries.add(pe1);</span>
+<span class="fc" id="L65">		assertEquals(null, cfec.findPreEntryPerResource(plane, pe1, flightEntries));</span>
+		//存在满足条件的计划项
+<span class="fc" id="L67">		PlanningEntry&lt;Plane&gt; pe2 = PlanningEntry.flightEntry(&quot;B2&quot;, departure, arrival, &quot;2020-04-27 10:00&quot;, &quot;2020-04-27 12:00&quot;);</span>
+<span class="fc" id="L68">		((FlightEntry&lt;Plane&gt;) pe2).allocatePlane(plane);</span>
+<span class="fc" id="L69">		flightEntries.add(pe2);</span>
+<span class="fc" id="L70">		assertEquals(pe1, cfec.findPreEntryPerResource(plane, pe2, flightEntries));</span>
+<span class="fc" id="L71">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

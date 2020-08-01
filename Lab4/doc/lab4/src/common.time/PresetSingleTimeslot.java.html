@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>PresetSingleTimeslot.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.time</a> &gt; <span class="el_source">PresetSingleTimeslot.java</span></div><h1>PresetSingleTimeslot.java</h1><pre class="source lang-java linenums">package common.time;
+
+/**
+ * 一个immutable的类型，表示计划项运行过程中的起止时刻
+ */
+<span class="pc bpc" id="L6" title="1 of 2 branches missed.">public class PresetSingleTimeslot implements PresetSingleTimeslotEntry {</span>
+
+	private final Timeslot timeslot;
+
+	// Abstraction function:
+	// AF(timeslot)=计划项运行过程中的起止时刻
+	// Representation invariant:
+	// timeslot!=null
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+
+	/**
+	 * 创建起止时刻表
+	 * 
+	 * @param start 开始时间
+	 * @param end   结束时间
+	 */
+<span class="fc" id="L23">	public PresetSingleTimeslot(String start, String end) {</span>
+<span class="fc" id="L24">		this.timeslot = new Timeslot(start, end);</span>
+<span class="fc" id="L25">		checkRep();</span>
+<span class="fc" id="L26">	}</span>
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L32" title="2 of 4 branches missed.">		assert timeslot != null;</span>
+<span class="fc" id="L33">	}</span>
+
+	@Override
+	public Timeslot getTimeslot() {
+<span class="fc" id="L37">		checkRep();</span>
+<span class="fc" id="L38">		return timeslot;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>CheckActivityEntryPlanA.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.conflict</a> &gt; <span class="el_source">CheckActivityEntryPlanA.java</span></div><h1>CheckActivityEntryPlanA.java</h1><pre class="source lang-java linenums">package common.conflict;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import activity.ActivityEntry;
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.time.Timeslot;
+
+/**
+ * 检查活动计划项是否存在位置独占冲突
+ * 
+ * @param &lt;R&gt; 资源类型
+ */
+<span class="fc" id="L16">public class CheckActivityEntryPlanA&lt;R&gt; implements CheckActivityEntry&lt;R&gt; {</span>
+
+	@Override
+	public boolean checkLocationConflict(List&lt;PlanningEntry&lt;R&gt;&gt; entries) {
+<span class="fc bfc" id="L20" title="All 4 branches covered.">		if (entries == null || entries.size() &lt; 2)</span>
+<span class="fc" id="L21">			return false;</span>
+<span class="fc" id="L22">		List&lt;ActivityEntry&lt;R&gt;&gt; activityEntries = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">		for (PlanningEntry&lt;R&gt; pe : entries)</span>
+<span class="fc" id="L24">			activityEntries.add((ActivityEntry&lt;R&gt;) pe);</span>
+<span class="fc" id="L25">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L26">		List&lt;Timeslot&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">		for (ActivityEntry&lt;R&gt; ae : activityEntries) {</span>
+<span class="fc" id="L28">			Location location = ae.getLocation();</span>
+<span class="fc" id="L29">			Timeslot time = ae.getTimeslot();</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">			if (locations.contains(location))</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">				for (Location loc : locations)</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">					if (loc.equals(location)) {</span>
+<span class="fc" id="L33">						int index = locations.indexOf(loc);</span>
+<span class="fc" id="L34">						Timeslot t = times.get(index);</span>
+<span class="pc bpc" id="L35" title="1 of 4 branches missed.">						if (!(t.isBefore(time) || time.isBefore(t)))</span>
+<span class="fc" id="L36">							return true;</span>
+					}
+<span class="fc" id="L38">			locations.add(location);</span>
+<span class="fc" id="L39">			times.add(time);</span>
+		}
+<span class="fc" id="L41">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>PresetMultipleTimeslot.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.time</a> &gt; <span class="el_source">PresetMultipleTimeslot.java</span></div><h1>PresetMultipleTimeslot.java</h1><pre class="source lang-java linenums">package common.time;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * 一个immutable的类型，表示计划项运行过程中的时刻表
+ */
+<span class="pc bpc" id="L10" title="1 of 2 branches missed.">public class PresetMultipleTimeslot implements PresetMultipleTimeslotEntry {</span>
+
+	private final List&lt;Timeslot&gt; timeslot;
+
+	// Abstraction function:
+	// 以timeslot中的顺序排好序的，有timeslot.size()个个体的一组资源
+	// Representation invariant:
+	// timeslot!=null
+	// timeslot.size()&gt;0
+	// 时刻表中的时间要按时间顺序排列
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+	// 获得资源时用Collections.unmodifiableList()转化为不可变的List输出
+
+	/**
+	 * 创建一个时刻表
+	 * 
+	 * @param times 被预设的时间表，非空，times.size()&gt;0，times.size() % 2 ==0，时间要按时间顺序排列
+	 */
+<span class="fc" id="L29">	public PresetMultipleTimeslot(List&lt;String&gt; times) {</span>
+		// times不满足前置条件，抛出异常
+<span class="pc bpc" id="L31" title="3 of 6 branches missed.">		if (times == null || times.size() == 0 || times.size() % 2 != 0)</span>
+<span class="nc" id="L32">			throw new IllegalArgumentException(&quot;参数不合法&quot;);</span>
+<span class="fc" id="L33">		List&lt;Timeslot&gt; timeslot = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">		for (int i = 0; i &lt; times.size(); i += 2)</span>
+<span class="fc" id="L35">			timeslot.add(new Timeslot(times.get(i), times.get(i + 1)));</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">		for (int i = 0; i &lt; timeslot.size() - 1; i++)</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">			if (timeslot.get(i).getEndTime().isAfter(timeslot.get(i + 1).getStartTime()))</span>
+<span class="nc" id="L38">				throw new IllegalArgumentException(&quot;参数顺序不合法&quot;);</span>
+<span class="fc" id="L39">		this.timeslot = timeslot;</span>
+<span class="fc" id="L40">		checkRep();</span>
+<span class="fc" id="L41">	}</span>
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">		assert this.timeslot != null;</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">		assert this.timeslot.size() &gt; 0;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">		for (int i = 0; i &lt; timeslot.size() - 1; i++)</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">			if (timeslot.get(i).getEndTime().isAfter(timeslot.get(i + 1).getStartTime()))</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">				assert false;</span>
+<span class="fc" id="L52">	}</span>
+
+	@Override
+	public List&lt;Timeslot&gt; getTimeslot() {
+<span class="fc" id="L56">		checkRep();</span>
+<span class="fc" id="L57">		return Collections.unmodifiableList(timeslot);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ActivityEntryTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">activity</a> &gt; <span class="el_source">ActivityEntryTest.java</span></div><h1>ActivityEntryTest.java</h1><pre class="source lang-java linenums">package activity;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.plan.PlanningEntryInstanceTest;
+import common.time.Timeslot;
+
+<span class="pc bpc" id="L12" title="1 of 2 branches missed.">public class ActivityEntryTest extends PlanningEntryInstanceTest&lt;Material&gt; {</span>
+
+    // Test strategy
+    // 测试allocateMaterial()
+    // 状态可分配资源，状态不可分配资源
+    // 测试getMaterial()
+    // 测试得到的资源是否与期望的相同
+    // 测试getTimeslot()
+    // 测试得到的时间表是否与期望的相同
+    // 测试setLocation()
+	// 状态可更改位置，状态不可更改位置
+    // 测试getLocation()
+    // 测试得到的位置是否与期望的相同
+    // 测试compareTo()
+    // 在pe之前开始，在pe之后开始，在pe同时开始
+    
+    @Override
+    public PlanningEntry&lt;Material&gt; entryInstance() {
+<span class="fc" id="L30">        String start = &quot;2020-04-26 10:00&quot;;</span>
+<span class="fc" id="L31">        String end = &quot;2020-04-26 12:00&quot;;</span>
+<span class="fc" id="L32">        return PlanningEntry.activityEntry(name, start, end);</span>
+    }
+
+    @Test(expected = AssertionError.class)
+    public void testAssertionsEnabled() {
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        assert false; // make sure assertions are enabled with VM argument: -ea</span>
+<span class="nc" id="L38">    }</span>
+
+    @Test
+    public void testAllocateMaterial() {
+<span class="fc" id="L42">        PlanningEntry&lt;Material&gt; pe = entryInstance();</span>
+<span class="fc" id="L43">        Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+        //状态可分配资源
+<span class="fc" id="L45">        assertTrue(((ActivityEntry&lt;Material&gt;) pe).allocateMaterial(material));</span>
+        //状态不可分配资源
+<span class="fc" id="L47">        pe.cancel();</span>
+<span class="fc" id="L48">        assertFalse(((ActivityEntry&lt;Material&gt;) pe).allocateMaterial(material));</span>
+<span class="fc" id="L49">    }</span>
+
+    @Test
+    public void testGetMaterial() {
+<span class="fc" id="L53">        PlanningEntry&lt;Material&gt; pe = entryInstance();</span>
+<span class="fc" id="L54">        Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L55">        ((ActivityEntry&lt;Material&gt;) pe).allocateMaterial(material);</span>
+<span class="fc" id="L56">        assertEquals(material, ((ActivityEntry&lt;Material&gt;) pe).getMaterial());</span>
+<span class="fc" id="L57">    }</span>
+
+    @Test
+    public void testGetTimeslot() {
+<span class="fc" id="L61">        PlanningEntry&lt;Material&gt; pe = entryInstance();</span>
+<span class="fc" id="L62">        Timeslot t = new Timeslot(&quot;2020-04-26 10:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L63">        assertEquals(t, ((ActivityEntry&lt;Material&gt;) pe).getTimeslot());</span>
+<span class="fc" id="L64">    }</span>
+
+    @Test
+    public void testSetLocation() {
+<span class="fc" id="L68">        Location loc = new Location(&quot;place&quot;, false);</span>
+<span class="fc" id="L69">        PlanningEntry&lt;Material&gt; pe = entryInstance();</span>
+        //位置不为空，状态可更改位置
+<span class="fc" id="L71">        assertTrue(((ActivityEntry&lt;Material&gt;) pe).setLocation(loc));</span>
+        //状态不可更改位置
+<span class="fc" id="L73">        pe.cancel();</span>
+<span class="fc" id="L74">        assertFalse(((ActivityEntry&lt;Material&gt;) pe).setLocation(loc));</span>
+<span class="fc" id="L75">    }</span>
+
+    @Test
+    public void testGetLocation() {
+<span class="fc" id="L79">        Location loc = new Location(&quot;place&quot;, false);</span>
+<span class="fc" id="L80">        PlanningEntry&lt;Material&gt; pe = entryInstance();</span>
+<span class="fc" id="L81">        ((ActivityEntry&lt;Material&gt;) pe).setLocation(loc);</span>
+<span class="fc" id="L82">        assertEquals(loc, ((ActivityEntry&lt;Material&gt;) pe).getLocation());</span>
+<span class="fc" id="L83">    }</span>
+
+    @Test
+    public void testCompareTo() {
+<span class="fc" id="L87">        PlanningEntry&lt;Material&gt; pe = entryInstance();</span>
+        //在pe之前开始
+<span class="fc" id="L89">        PlanningEntry&lt;Material&gt; beforePe = PlanningEntry.activityEntry(name, &quot;2020-04-26 09:00&quot;, &quot;2020-04-26 10:00&quot;);</span>
+<span class="fc" id="L90">        assertEquals(1, pe.compareTo(beforePe));</span>
+        //在pe之后开始
+<span class="fc" id="L92">        PlanningEntry&lt;Material&gt; afterPe = PlanningEntry.activityEntry(name, &quot;2020-04-26 11:00&quot;, &quot;2020-04-26 12:00&quot;);</span>
+<span class="fc" id="L93">        assertEquals(-1, pe.compareTo(afterPe));</span>
+        //与pe同时开始
+<span class="fc" id="L95">        PlanningEntry&lt;Material&gt; equalPe = PlanningEntry.activityEntry(name, &quot;2020-04-26 10:00&quot;, &quot;2020-04-26 11:00&quot;);</span>
+<span class="fc" id="L96">        assertEquals(0, pe.compareTo(equalPe));</span>
+<span class="fc" id="L97">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

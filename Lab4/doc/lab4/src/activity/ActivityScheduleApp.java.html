@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ActivityScheduleApp.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">activity</a> &gt; <span class="el_source">ActivityScheduleApp.java</span></div><h1>ActivityScheduleApp.java</h1><pre class="source lang-java linenums">package activity;
+
+import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+import common.conflict.CheckActivityEntryPlanA;
+import common.conflict.CheckActivityEntryPlanB;
+import common.conflict.PlanningEntryAPIs;
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.time.Timeslot;
+import exceptions.*;
+
+/**
+ * 学习活动管理应用
+ */
+public class ActivityScheduleApp {
+<span class="fc" id="L43">	private final JFrame frame = new JFrame();</span>
+<span class="fc" id="L44">	private final JPanel buttonPanel = new JPanel();</span>
+<span class="fc" id="L45">	private final Set&lt;Location&gt; locations = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L46">	private final Set&lt;Material&gt; materials = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L47">	private final Board&lt;Material&gt; board = new Board&lt;&gt;();</span>
+<span class="fc" id="L48">	private final PlanningEntryAPIs&lt;Material&gt; checkConf = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L49">	private final Logger log = Logger.getLogger(ActivityScheduleApp.class.getName());</span>
+
+<span class="fc" id="L51">	public ActivityScheduleApp() {</span>
+		try {
+<span class="fc" id="L53">			new FileWriter(&quot;src/log/activitylog.log&quot;).close();</span>
+<span class="fc" id="L54">			Locale.setDefault(new Locale(&quot;en&quot;, &quot;EN&quot;));</span>
+<span class="fc" id="L55">			log.setLevel(Level.INFO);</span>
+<span class="fc" id="L56">			FileHandler fh = new FileHandler(&quot;src/log/activitylog.log&quot;, true);</span>
+<span class="fc" id="L57">			fh.setFormatter(new SimpleFormatter());</span>
+<span class="fc" id="L58">			log.addHandler(fh);</span>
+<span class="pc" id="L59">		} catch (Exception e) {</span>
+<span class="nc" id="L60">			e.printStackTrace();</span>
+		}
+<span class="fc" id="L62">	}</span>
+
+	/**
+	 * 操作面板
+	 */
+	public void run() {
+		
+<span class="nc" id="L69">		buttonPanel.setLayout(new GridLayout(8, 2));</span>
+
+<span class="nc" id="L71">		JButton addMaterial = new JButton(&quot;Add Material&quot;);</span>
+<span class="nc" id="L72">		buttonPanel.add(addMaterial);</span>
+<span class="nc" id="L73">		addMaterial.addActionListener(event -&gt; addMaterrial());</span>
+
+<span class="nc" id="L75">		JButton removeMaterial = new JButton(&quot;Remove Material&quot;);</span>
+<span class="nc" id="L76">		buttonPanel.add(removeMaterial);</span>
+<span class="nc" id="L77">		removeMaterial.addActionListener(event -&gt; removeMaterial());</span>
+
+<span class="nc" id="L79">		JButton addLocation = new JButton(&quot;Add Location&quot;);</span>
+<span class="nc" id="L80">		buttonPanel.add(addLocation);</span>
+<span class="nc" id="L81">		addLocation.addActionListener(event -&gt; addLocation());</span>
+
+<span class="nc" id="L83">		JButton removeLocation = new JButton(&quot;Remove Location&quot;);</span>
+<span class="nc" id="L84">		buttonPanel.add(removeLocation);</span>
+<span class="nc" id="L85">		removeLocation.addActionListener(event -&gt; removeLocation());</span>
+
+<span class="nc" id="L87">		JButton addActivity = new JButton(&quot;Add ActivityEntry&quot;);</span>
+<span class="nc" id="L88">		buttonPanel.add(addActivity);</span>
+<span class="nc" id="L89">		addActivity.addActionListener(event -&gt; addActivity());</span>
+
+<span class="nc" id="L91">		JButton cancelActivity = new JButton(&quot;Cancel ActivityEntry&quot;);</span>
+<span class="nc" id="L92">		buttonPanel.add(cancelActivity);</span>
+<span class="nc" id="L93">		cancelActivity.addActionListener(event -&gt; cancelActivity());</span>
+
+<span class="nc" id="L95">		JButton allocateActivity = new JButton(&quot;Allocate ActivityEntry&quot;);</span>
+<span class="nc" id="L96">		buttonPanel.add(allocateActivity);</span>
+<span class="nc" id="L97">		allocateActivity.addActionListener(event -&gt; allocateActivity());</span>
+
+<span class="nc" id="L99">		JButton runActivity = new JButton(&quot;Run ActivityEntry&quot;);</span>
+<span class="nc" id="L100">		buttonPanel.add(runActivity);</span>
+<span class="nc" id="L101">		runActivity.addActionListener(event -&gt; runActivity());</span>
+
+<span class="nc" id="L103">		JButton setLocation = new JButton(&quot;Set Location&quot;);</span>
+<span class="nc" id="L104">		buttonPanel.add(setLocation);</span>
+<span class="nc" id="L105">		setLocation.addActionListener(event -&gt; setLocation());</span>
+
+<span class="nc" id="L107">		JButton endActivity = new JButton(&quot;End ActivityEntry&quot;);</span>
+<span class="nc" id="L108">		buttonPanel.add(endActivity);</span>
+<span class="nc" id="L109">		endActivity.addActionListener(event -&gt; endActivity());</span>
+
+<span class="nc" id="L111">		JButton getState = new JButton(&quot;Get Entry State&quot;);</span>
+<span class="nc" id="L112">		buttonPanel.add(getState);</span>
+<span class="nc" id="L113">		getState.addActionListener(event -&gt; getState());</span>
+
+<span class="nc" id="L115">		JButton findEntryUseResource = new JButton(&quot;Find All Entry Use Resource&quot;);</span>
+<span class="nc" id="L116">		buttonPanel.add(findEntryUseResource);</span>
+<span class="nc" id="L117">		findEntryUseResource.addActionListener(event -&gt; findAllEntryUseResource());</span>
+
+<span class="nc" id="L119">		JButton checkConflictPlanA = new JButton(&quot;Check Location Conflict PlanA&quot;);</span>
+<span class="nc" id="L120">		buttonPanel.add(checkConflictPlanA);</span>
+<span class="nc" id="L121">		checkConflictPlanA.addActionListener(event -&gt; checkConflictPlanA());</span>
+
+<span class="nc" id="L123">		JButton checkConflictPlanB = new JButton(&quot;Check Location Conflict PlanB&quot;);</span>
+<span class="nc" id="L124">		buttonPanel.add(checkConflictPlanB);</span>
+<span class="nc" id="L125">		checkConflictPlanB.addActionListener(event -&gt; checkConflictPlanB());</span>
+
+<span class="nc" id="L127">		JButton findLocation = new JButton(&quot;Find Entry At Location&quot;);</span>
+<span class="nc" id="L128">		buttonPanel.add(findLocation);</span>
+<span class="nc" id="L129">		findLocation.addActionListener(event -&gt; findLocation());</span>
+
+<span class="nc" id="L131">		JButton readLog = new JButton(&quot;Read log file&quot;);</span>
+<span class="nc" id="L132">		buttonPanel.add(readLog);</span>
+<span class="nc" id="L133">		readLog.addActionListener(event -&gt; readLog());</span>
+		
+<span class="nc" id="L135">		frame.add(buttonPanel);</span>
+<span class="nc" id="L136">		frame.pack();</span>
+<span class="nc" id="L137">		frame.setVisible(true);</span>
+<span class="nc" id="L138">		frame.addWindowListener(new WindowAdapter() {</span>
+			@Override
+			public void windowClosing(WindowEvent e) {
+<span class="nc" id="L141">				System.exit(0);</span>
+<span class="nc" id="L142">			}</span>
+		});
+<span class="nc" id="L144">	}</span>
+
+	/**
+	 * 添加可用学习资料
+	 */
+	public void addMaterrial() {
+<span class="nc" id="L150">		String name = JOptionPane.showInputDialog(&quot;材料的名字：&quot;);</span>
+<span class="nc" id="L151">		String department = JOptionPane.showInputDialog(&quot;材料的发布部门：&quot;);</span>
+<span class="nc" id="L152">		String date = &quot;&quot;;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		while (!date.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;))</span>
+<span class="nc" id="L154">			date = JOptionPane.showInputDialog(&quot;材料的发布日期,格式yyyy-MM-dd：&quot;);</span>
+<span class="nc" id="L155">		Material material = new Material(name, department, date);</span>
+<span class="nc" id="L156">		String materialInfo = &quot;Name:&quot; + name + &quot;,Department:&quot; + department + &quot;,Date:&quot; + date;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (addMaterial(material)) {</span>
+<span class="nc" id="L158">			log.info(&quot;AddMaterrial;&quot; + materialInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L159">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L160">		} else {</span>
+<span class="nc" id="L161">			log.info(&quot;AddMaterrial;&quot; + materialInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L162">			JOptionPane.showMessageDialog(null, &quot;此材料已存在！&quot;);</span>
+		}
+<span class="nc" id="L164">	}</span>
+
+	/**
+	 * 添加学习资料的功能实现
+	 * 
+	 * @param material 资料
+	 * @return true 成功; false 已存在，失败
+	 */
+	public boolean addMaterial(Material material) {
+<span class="fc bfc" id="L173" title="All 2 branches covered.">		if (materials.contains(material))</span>
+<span class="fc" id="L174">			return false;</span>
+		else {
+<span class="fc" id="L176">			materials.add(material);</span>
+<span class="fc" id="L177">			return true;</span>
+		}
+	}
+
+	/**
+	 * 删除不可用学习资料
+	 */
+	public void removeMaterial() {
+<span class="nc" id="L185">		String name = JOptionPane.showInputDialog(&quot;材料的名字：&quot;);</span>
+<span class="nc" id="L186">		String department = JOptionPane.showInputDialog(&quot;材料的发布部门：&quot;);</span>
+<span class="nc" id="L187">		String date = &quot;&quot;;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		while (!date.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;))</span>
+<span class="nc" id="L189">			date = JOptionPane.showInputDialog(&quot;材料的发布日期,格式yyyy-MM-dd：&quot;);</span>
+<span class="nc" id="L190">		Material material = new Material(name, department, date);</span>
+<span class="nc" id="L191">		String materialInfo = &quot;Name:&quot; + name + &quot;,Department:&quot; + department + &quot;,Date:&quot; + date;</span>
+		try {
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			if (removeMaterial(material)) {</span>
+<span class="nc" id="L194">				log.info(&quot;RemoveMaterial;&quot; + materialInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L195">				JOptionPane.showMessageDialog(null, &quot;删除成功！&quot;);</span>
+<span class="nc" id="L196">			} else {</span>
+<span class="nc" id="L197">				log.info(&quot;RemoveMaterial;&quot; + materialInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L198">				JOptionPane.showMessageDialog(null, &quot;此材料不存在！&quot;);</span>
+			}
+<span class="nc" id="L200">		} catch (EntryUseResourceOrLocationException e) {</span>
+<span class="nc" id="L201">			log.info(&quot;RemoveMaterial;&quot; + materialInfo + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新指定资源？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L203">				log.warning(</span>
+<span class="nc" id="L204">						&quot;RemoveMaterial;EntryUseResourceOrLocationException:ActivityScheduleApp.removeMaterial(material);reselect resource&quot;);</span>
+<span class="nc" id="L205">				removeMaterial();</span>
+<span class="nc" id="L206">			} else</span>
+<span class="nc" id="L207">				log.warning(</span>
+<span class="nc" id="L208">						&quot;RemoveMaterial;EntryUseResourceOrLocationException:ActivityScheduleApp.removeMaterial(material);end&quot;);</span>
+		}
+
+<span class="nc" id="L211">	}</span>
+
+	/**
+	 * 删除不可用资源的功能实现部分
+	 * 
+	 * @param material 待删除的资源
+	 * @return true 删除成功;false 不存在
+	 * @throws EntryUseResourceOrLocationException 资源被使用中
+	 */
+	public boolean removeMaterial(Material material) throws EntryUseResourceOrLocationException {
+<span class="fc bfc" id="L221" title="All 2 branches covered.">		if (materials.contains(material)) {</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">			for (PlanningEntry&lt;Material&gt; pe : board.getActivityEntries())</span>
+<span class="pc bpc" id="L223" title="2 of 4 branches missed.">				if (((ActivityEntry&lt;Material&gt;) pe).getMaterial().equals(material) &amp;&amp; !pe.getState().equals(&quot;ENDED&quot;))</span>
+<span class="fc" id="L224">					throw new EntryUseResourceOrLocationException(&quot;计划项&quot; + pe.getName() + &quot;正在使用该资源，不能删除&quot;);</span>
+<span class="fc" id="L225">			materials.remove(material);</span>
+<span class="fc" id="L226">			return true;</span>
+		} else
+<span class="fc" id="L228">			return false;</span>
+	}
+
+	/**
+	 * 添加可用位置
+	 */
+	public void addLocation() {
+<span class="nc" id="L235">		String name = JOptionPane.showInputDialog(&quot;地点名称：&quot;);</span>
+<span class="nc" id="L236">		Location loc = new Location(name, false);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (addLocation(loc)) {</span>
+<span class="nc" id="L238">			log.info(&quot;AddLocation;Name:&quot; + name + &quot;;success&quot;);</span>
+<span class="nc" id="L239">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L240">		} else {</span>
+<span class="nc" id="L241">			log.info(&quot;AddLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc" id="L242">			JOptionPane.showMessageDialog(null, &quot;此地点已存在！&quot;);</span>
+		}
+<span class="nc" id="L244">	}</span>
+
+	/**
+	 * 添加可用位置的功能实现部分
+	 * 
+	 * @param loc 待添加的位置
+	 * @return true 添加成功;false 位置已存在
+	 */
+	public boolean addLocation(Location loc) {
+<span class="fc bfc" id="L253" title="All 2 branches covered.">		if (locations.contains(loc))</span>
+<span class="fc" id="L254">			return false;</span>
+		else {
+<span class="fc" id="L256">			locations.add(loc);</span>
+<span class="fc" id="L257">			return true;</span>
+		}
+	}
+
+	/**
+	 * 删除不可用的位置
+	 */
+	public void removeLocation() {
+<span class="nc" id="L265">		String name = JOptionPane.showInputDialog(&quot;地点名称：&quot;);</span>
+<span class="nc" id="L266">		Location loc = new Location(name, true);</span>
+		try {
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			if (removeLocation(loc)) {</span>
+<span class="nc" id="L269">				log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;success&quot;);</span>
+<span class="nc" id="L270">				JOptionPane.showMessageDialog(null, &quot;删除成功！&quot;);</span>
+<span class="nc" id="L271">			} else {</span>
+<span class="nc" id="L272">				log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc" id="L273">				JOptionPane.showMessageDialog(null, &quot;此地点不存在！&quot;);</span>
+			}
+<span class="nc" id="L275">		} catch (EntryUseResourceOrLocationException e) {</span>
+<span class="nc" id="L276">			log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新指定位置？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L278">				log.warning(</span>
+<span class="nc" id="L279">						&quot;RemoveLocation;EntryUseResourceOrLocationException:ActivityScheduleApp.removeLocation(loc);reselect location&quot;);</span>
+<span class="nc" id="L280">				removeLocation();</span>
+<span class="nc" id="L281">			} else</span>
+<span class="nc" id="L282">				log.warning(</span>
+<span class="nc" id="L283">						&quot;RemoveLocation;EntryUseResourceOrLocationException:ActivityScheduleApp.removeLocation(loc);end&quot;);</span>
+		}
+
+<span class="nc" id="L286">	}</span>
+
+	/**
+	 * 删除不可用的位置的功能实现部分
+	 * 
+	 * @param loc 待删除的位置
+	 * @return true 删除成功;false 不存在位置
+	 * @throws EntryUseResourceOrLocationException 有计划项在使用该位置
+	 */
+	public boolean removeLocation(Location loc) throws EntryUseResourceOrLocationException {
+<span class="fc bfc" id="L296" title="All 2 branches covered.">		if (locations.contains(loc)) {</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">			for (PlanningEntry&lt;Material&gt; pe : board.getActivityEntries())</span>
+<span class="pc bpc" id="L298" title="2 of 4 branches missed.">				if (((ActivityEntry&lt;Material&gt;) pe).getLocation().equals(loc) &amp;&amp; !pe.getState().equals(&quot;ENDED&quot;))</span>
+<span class="fc" id="L299">					throw new EntryUseResourceOrLocationException(&quot;计划项&quot; + pe.getName() + &quot;正在使用该位置，不可删除&quot;);</span>
+<span class="fc" id="L300">			locations.remove(loc);</span>
+<span class="fc" id="L301">			return true;</span>
+		} else
+<span class="fc" id="L303">			return false;</span>
+	}
+
+	/**
+	 * 找到指定的计划项
+	 * 
+	 * @return null 没有相应的计划项 非空 相应的计划项
+	 */
+	private PlanningEntry&lt;Material&gt; findActivityEntry(StringBuilder ActivityInfo) {
+<span class="nc" id="L312">		String name = JOptionPane.showInputDialog(&quot;活动主题：&quot;);</span>
+<span class="nc" id="L313">		String location = JOptionPane.showInputDialog(&quot;活动地点：&quot;);</span>
+<span class="nc" id="L314">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc" id="L315">		String start = &quot;&quot;;</span>
+<span class="nc" id="L316">		String end = &quot;&quot;;</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		while (!start.matches(regex))</span>
+<span class="nc" id="L318">			start = JOptionPane.showInputDialog(&quot;开始时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		while (!end.matches(regex))</span>
+<span class="nc" id="L320">			end = JOptionPane.showInputDialog(&quot;结束时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L321">		ActivityInfo.append(&quot;Entry:&quot; + name);</span>
+<span class="nc" id="L322">		ActivityInfo.append(&quot;,Departure&quot; + location);</span>
+<span class="nc" id="L323">		ActivityInfo.append(&quot;,StartTime:&quot; + start);</span>
+<span class="nc" id="L324">		ActivityInfo.append(&quot;,EndTime:&quot; + end);</span>
+
+<span class="nc" id="L326">		return findActivityEntry(name, location, start, end);</span>
+	}
+
+	/**
+	 * 找到指定的计划项
+	 * @param name 计划项名
+	 * @param location 位置
+	 * @param start 开始时间
+	 * @param end 结束时间
+	 * @return null 没有相应的计划项 非空 相应的计划项
+	 */
+	public PlanningEntry&lt;Material&gt; findActivityEntry(String name, String location, String start, String end){
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">		for (PlanningEntry&lt;Material&gt; pe : board.getActivityEntries()) {</span>
+<span class="fc" id="L339">			ActivityEntry&lt;Material&gt; ae = (ActivityEntry&lt;Material&gt;) pe;</span>
+<span class="pc bpc" id="L340" title="2 of 4 branches missed.">			if (ae.getName().equals(name) &amp;&amp; ae.getLocation().getName().equals(location)</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">					&amp;&amp; ae.getTimeslot().equals(new Timeslot(start, end)))</span>
+<span class="fc" id="L342">				return pe;</span>
+		}
+<span class="nc" id="L344">		return null;</span>
+	}
+
+	/**
+	 * 增加一条新的计划项
+	 */
+	public void addActivity() {
+<span class="nc" id="L351">		String name = JOptionPane.showInputDialog(&quot;活动主题：&quot;);</span>
+<span class="nc" id="L352">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc" id="L353">		String start = &quot;&quot;;</span>
+<span class="nc" id="L354">		String end = &quot;&quot;;</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">		while (!start.matches(regex))</span>
+<span class="nc" id="L356">			start = JOptionPane.showInputDialog(&quot;开始时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		while (!end.matches(regex))</span>
+<span class="nc" id="L358">			end = JOptionPane.showInputDialog(&quot;结束时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+
+<span class="nc" id="L360">		while (true) {</span>
+<span class="nc" id="L361">			String location = JOptionPane.showInputDialog(&quot;活动地点：&quot;);</span>
+<span class="nc" id="L362">			String activityInfo = &quot;Entry:&quot; + name + &quot;,Departure&quot; + location + &quot;,StartTime:&quot; + start + &quot;,EndTime:&quot; + end;</span>
+<span class="nc" id="L363">			Location loc = null;</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			for (Location l : locations)</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">				if (l.getName().equals(location)) {</span>
+<span class="nc" id="L366">					loc = l;</span>
+<span class="nc" id="L367">					break;</span>
+				}
+			try {
+<span class="nc bnc" id="L370" title="All 2 branches missed.">				if (loc == null) {</span>
+<span class="nc" id="L371">					log.info(&quot;AddActivity;&quot; + activityInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L372">					JOptionPane.showMessageDialog(null, &quot;无位置，添加失败！&quot;);</span>
+<span class="nc" id="L373">					return;</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">				} else if (addActivity(name, start, end, loc)) {</span>
+<span class="nc" id="L375">					log.info(&quot;AddActivity;&quot; + activityInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L376">					JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L377">					return;</span>
+				} else {
+<span class="nc" id="L379">					log.info(&quot;AddActivity;&quot; + activityInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L380">					JOptionPane.showMessageDialog(null, &quot;已有该计划项，添加失败！&quot;);</span>
+<span class="nc" id="L381">					return;</span>
+				}
+<span class="nc" id="L383">			} catch (ResourceOrLocationConflictException e) {</span>
+<span class="nc" id="L384">				log.info(&quot;AddActivity;&quot; + activityInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L385">				JOptionPane.showMessageDialog(null, e.getMessage() + &quot;\n请重新输入地点&quot;);</span>
+<span class="nc" id="L386">				log.warning(</span>
+<span class="nc" id="L387">						&quot;AddActivity;ResourceOrLocationConflictException:ActivityScheduleApp.addActivity;reset location&quot;);</span>
+				continue;
+			}
+		}
+	}
+
+	/**
+	 * 增加一条新的计划项的功能实现部分
+	 * 
+	 * @param name  活动名称，非空
+	 * @param start 开始时间，非空
+	 * @param end   结束时间，非空
+	 * @param loc   活动位置，非空
+	 * @return 添加成功;false 计划项已存在
+	 * @throws ResourceOrLocationConflictException 设置位置后与已有计划项存在位置独占冲突
+	 */
+	public boolean addActivity(String name, String start, String end, Location loc)
+			throws ResourceOrLocationConflictException {
+<span class="fc bfc" id="L405" title="All 2 branches covered.">		for (PlanningEntry&lt;Material&gt; pe : board.getActivityEntries()) {</span>
+<span class="fc" id="L406">			ActivityEntry&lt;Material&gt; ae = (ActivityEntry&lt;Material&gt;) pe;</span>
+<span class="pc bpc" id="L407" title="1 of 4 branches missed.">			if (ae.getName().equals(name) &amp;&amp; ae.getTimeslot().equals(new Timeslot(start, end)))</span>
+<span class="fc" id="L408">				return false;</span>
+		}
+<span class="fc" id="L410">		PlanningEntry&lt;Material&gt; activityEntry = PlanningEntry.activityEntry(name, start, end);</span>
+<span class="fc" id="L411">		List&lt;PlanningEntry&lt;Material&gt;&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L412" title="All 2 branches covered.">		for(PlanningEntry&lt;Material&gt; ae: board.getActivityEntries())</span>
+<span class="fc" id="L413">			list.add(ae);</span>
+<span class="fc" id="L414">		list.add(activityEntry);</span>
+<span class="fc" id="L415">		((ActivityEntry&lt;Material&gt;) activityEntry).setLocation(loc);</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">		if (checkConf.checkLocationConflict(new CheckActivityEntryPlanA&lt;Material&gt;(), list))</span>
+<span class="fc" id="L417">			throw new ResourceOrLocationConflictException(&quot;设置后导致与其他计划项产生位置独占冲突&quot;);</span>
+<span class="fc" id="L418">		board.addActivityEntry(activityEntry);</span>
+<span class="fc" id="L419">		return true;</span>
+	}
+
+	/**
+	 * 取消某个计划项
+	 */
+	public void cancelActivity() {
+<span class="nc" id="L426">		StringBuilder activityInfo = new StringBuilder();</span>
+<span class="nc" id="L427">		PlanningEntry&lt;Material&gt; ae = findActivityEntry(activityInfo);</span>
+		try {
+<span class="nc bnc" id="L429" title="All 2 branches missed.">			if (cancelActivity(ae)) {</span>
+<span class="nc" id="L430">				log.info(&quot;CancelActivity;&quot; + activityInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L431">				JOptionPane.showMessageDialog(null, &quot;取消成功！&quot;);</span>
+<span class="nc" id="L432">			} else {</span>
+<span class="nc" id="L433">				log.info(&quot;CancelActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L434">				JOptionPane.showMessageDialog(null, &quot;没有该计划项，取消失败！&quot;);</span>
+			}
+<span class="nc" id="L436">		} catch (CannotCancelledException e) {</span>
+<span class="nc" id="L437">			log.info(&quot;CancelActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L438" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新选择取消的计划项？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L439">				log.warning(</span>
+<span class="nc" id="L440">						&quot;CancelActivity;CannotCancelledException:ActivityScheduleApp.cancelActivity(ae);reselect entry&quot;);</span>
+<span class="nc" id="L441">				cancelActivity();</span>
+<span class="nc" id="L442">			} else</span>
+<span class="nc" id="L443">				log.warning(&quot;CancelActivity;CannotCancelledException:ActivityScheduleApp.cancelActivity(ae);end&quot;);</span>
+		}
+<span class="nc" id="L445">	}</span>
+
+	/**
+	 * 取消计划项功能实现部分
+	 * 
+	 * @param ae 取消的计划项
+	 * @return true 取消成功;false 取消失败，计划项为空
+	 * @throws CannotCancelledException 当前计划项状态不可取消
+	 */
+	public boolean cancelActivity(PlanningEntry&lt;Material&gt; ae) throws CannotCancelledException {
+<span class="fc bfc" id="L455" title="All 2 branches covered.">		if (ae == null)</span>
+<span class="fc" id="L456">			return false;</span>
+<span class="fc bfc" id="L457" title="All 2 branches covered.">		if (ae.cancel())</span>
+<span class="fc" id="L458">			return true;</span>
+		else
+<span class="fc" id="L460">			throw new CannotCancelledException(&quot;当前状态不可取消！&quot;);</span>
+	}
+
+	/**
+	 * 为某个计划项分配资源
+	 */
+	public void allocateActivity() {
+<span class="nc" id="L467">		StringBuilder activityInfo = new StringBuilder();</span>
+<span class="nc" id="L468">		PlanningEntry&lt;Material&gt; ae = findActivityEntry(activityInfo);</span>
+<span class="nc" id="L469">		String materialName = JOptionPane.showInputDialog(&quot;材料的名字：&quot;);</span>
+<span class="nc" id="L470">		String department = JOptionPane.showInputDialog(&quot;材料的发布部门：&quot;);</span>
+<span class="nc" id="L471">		String date = &quot;&quot;;</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">		while (!date.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;))</span>
+<span class="nc" id="L473">			date = JOptionPane.showInputDialog(&quot;材料的发布日期,格式yyyy-MM-dd：&quot;);</span>
+<span class="nc" id="L474">		Material material = new Material(materialName, department, date);</span>
+<span class="nc bnc" id="L475" title="All 2 branches missed.">		if (ae == null) {</span>
+<span class="nc" id="L476">			log.info(&quot;AllocateActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L477">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，资源分配失败！&quot;);</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">		} else if (!materials.contains(material)) {</span>
+<span class="nc" id="L479">			log.info(&quot;AllocateActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L480">			JOptionPane.showMessageDialog(null, &quot;没有该资源，资源分配失败！&quot;);</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">		} else if (allocateActivity(ae, material)) {</span>
+<span class="nc" id="L482">			log.info(&quot;AllocateActivity;&quot; + activityInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L483">			JOptionPane.showMessageDialog(null, &quot;资源分配成功！&quot;);</span>
+<span class="nc" id="L484">		} else {</span>
+<span class="nc" id="L485">			log.info(&quot;AllocateActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L486">			JOptionPane.showMessageDialog(null, &quot;当前状态不可分配资源！&quot;);</span>
+		}
+<span class="nc" id="L488">	}</span>
+
+	/**
+	 * 为计划项分配资源的功能实现部分
+	 * 
+	 * @param ae       待分配的计划项
+	 * @param material 待分配的资源
+	 * @return true 分配成功; false 分配失败，计划项状态不能分配资源
+	 */
+	public boolean allocateActivity(PlanningEntry&lt;Material&gt; ae, Material material) {
+<span class="fc bfc" id="L498" title="All 2 branches covered.">		if (((ActivityEntry&lt;Material&gt;) ae).allocateMaterial(material))</span>
+<span class="fc" id="L499">			return true;</span>
+		else
+<span class="fc" id="L501">			return false;</span>
+	}
+
+	/**
+	 * 启动某个计划项
+	 */
+	public void runActivity() {
+<span class="nc" id="L508">		StringBuilder activityInfo = new StringBuilder();</span>
+<span class="nc" id="L509">		PlanningEntry&lt;Material&gt; ae = findActivityEntry(activityInfo);</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">		if (ae == null) {</span>
+<span class="nc" id="L511">			log.info(&quot;RunActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L512">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，启动失败！&quot;);</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">		} else if (ae.running()) {</span>
+<span class="nc" id="L514">			log.info(&quot;RunActivity;&quot; + activityInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L515">			JOptionPane.showMessageDialog(null, &quot;启动成功！&quot;);</span>
+<span class="nc" id="L516">		} else {</span>
+<span class="nc" id="L517">			log.info(&quot;RunActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L518">			JOptionPane.showMessageDialog(null, &quot;当前状态不可被启动！&quot;);</span>
+		}
+<span class="nc" id="L520">	}</span>
+
+	/**
+	 * 变更某个已存在的计划项的位置
+	 */
+	public void setLocation() {
+<span class="nc" id="L526">		StringBuilder activityInfo = new StringBuilder();</span>
+<span class="nc" id="L527">		PlanningEntry&lt;Material&gt; ae = findActivityEntry(activityInfo);</span>
+<span class="nc bnc" id="L528" title="All 2 branches missed.">		if (ae == null) {</span>
+<span class="nc" id="L529">			log.info(&quot;SetLocation;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L530">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，设置失败！&quot;);</span>
+<span class="nc" id="L531">			return;</span>
+		}
+
+<span class="nc" id="L534">		Location oldLoc = ((ActivityEntry&lt;Material&gt;) ae).getLocation();</span>
+<span class="nc" id="L535">		String newLocation = JOptionPane.showInputDialog(&quot;新活动地点：&quot;);</span>
+<span class="nc" id="L536">		Location loc = null;</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">		for (Location l : locations)</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">			if (l.getName().equals(newLocation)) {</span>
+<span class="nc" id="L539">				loc = l;</span>
+<span class="nc" id="L540">				break;</span>
+			}
+		try {
+<span class="nc bnc" id="L543" title="All 2 branches missed.">			if (loc == null) {</span>
+<span class="nc" id="L544">				log.info(&quot;SetLocation;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L545">				JOptionPane.showMessageDialog(null, &quot;无新位置，设置失败！&quot;);</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">			} else if (setLocation(ae, loc)) {</span>
+<span class="nc" id="L547">				log.info(&quot;SetLocation;&quot; + activityInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L548">				JOptionPane.showMessageDialog(null, &quot;设置成功！&quot;);</span>
+<span class="nc" id="L549">			} else {</span>
+<span class="nc" id="L550">				log.info(&quot;SetLocation;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L551">				JOptionPane.showMessageDialog(null, &quot;当前状态不能被设置位置！&quot;);</span>
+			}
+<span class="nc" id="L553">		} catch (ResourceOrLocationConflictException e) {</span>
+<span class="nc" id="L554">			((ActivityEntry&lt;Material&gt;) ae).setLocation(oldLoc);</span>
+<span class="nc" id="L555">			log.info(&quot;SetLocation;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新设置位置？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L557">				log.warning(</span>
+<span class="nc" id="L558">						&quot;SetLocation;ResourceOrLocationConflictException:ActivityScheduleApp.setLocation(ae, loc);reset location&quot;);</span>
+<span class="nc" id="L559">				setLocation();</span>
+<span class="nc" id="L560">			} else</span>
+<span class="nc" id="L561">				log.warning(</span>
+<span class="nc" id="L562">						&quot;SetLocation;ResourceOrLocationConflictException:ActivityScheduleApp.setLocation(ae, loc);end&quot;);</span>
+		}
+<span class="nc" id="L564">	}</span>
+
+	/**
+	 * 设置位置的功能实现部分
+	 * 
+	 * @param ae  计划项，非空
+	 * @param loc 位置，非空
+	 * @return true 设置成功;false 设置失败
+	 * @throws ResourceOrLocationConflictException 设置后导致与其他计划项产生位置独占冲突
+	 */
+	public boolean setLocation(PlanningEntry&lt;Material&gt; ae, Location loc) throws ResourceOrLocationConflictException {
+<span class="fc bfc" id="L575" title="All 2 branches covered.">		if (((ActivityEntry&lt;Material&gt;) ae).setLocation(loc)) {</span>
+<span class="pc bpc" id="L576" title="1 of 2 branches missed.">			if (checkConf.checkLocationConflict(new CheckActivityEntryPlanA&lt;Material&gt;(), board.getActivityEntries()))</span>
+<span class="nc" id="L577">				throw new ResourceOrLocationConflictException(&quot;设置后导致与其他计划项产生位置独占冲突&quot;);</span>
+<span class="fc" id="L578">			return true;</span>
+		} else
+<span class="fc" id="L580">			return false;</span>
+	}
+
+	/**
+	 * 结束某个计划项
+	 */
+	public void endActivity() {
+<span class="nc" id="L587">		StringBuilder activityInfo = new StringBuilder();</span>
+<span class="nc" id="L588">		PlanningEntry&lt;Material&gt; ae = findActivityEntry(activityInfo);</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">		if (ae == null) {</span>
+<span class="nc" id="L590">			log.info(&quot;EndActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L591">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，结束失败！&quot;);</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">		} else if (ae.end()) {</span>
+<span class="nc" id="L593">			log.info(&quot;EndActivity;&quot; + activityInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L594">			JOptionPane.showMessageDialog(null, &quot;结束成功！&quot;);</span>
+<span class="nc" id="L595">		} else {</span>
+<span class="nc" id="L596">			log.info(&quot;EndActivity;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L597">			JOptionPane.showMessageDialog(null, &quot;当前状态不可被结束！&quot;);</span>
+		}
+<span class="nc" id="L599">	}</span>
+
+	/**
+	 * 选定一个计划项，查看它的当前状态
+	 */
+	public void getState() {
+<span class="nc" id="L605">		StringBuilder activityInfo = new StringBuilder();</span>
+<span class="nc" id="L606">		PlanningEntry&lt;Material&gt; ae = findActivityEntry(activityInfo);</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">		if (ae == null) {</span>
+<span class="nc" id="L608">			log.info(&quot;GetState;&quot; + activityInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L609">			JOptionPane.showMessageDialog(null, &quot;此计划项不存在！&quot;);</span>
+<span class="nc" id="L610">		} else {</span>
+<span class="nc" id="L611">			log.info(&quot;GetState;&quot; + activityInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L612">			JOptionPane.showMessageDialog(null, &quot;此计划项状态为：&quot; + ae.getState());</span>
+		}
+<span class="nc" id="L614">	}</span>
+
+	/**
+	 * 用A方式检查是否存在位置冲突
+	 */
+	public void checkConflictPlanA() {
+<span class="nc bnc" id="L620" title="All 2 branches missed.">		if (checkConf.checkLocationConflict(new CheckActivityEntryPlanA&lt;Material&gt;(), board.getActivityEntries())) {</span>
+<span class="nc" id="L621">			log.info(&quot;CheckLocationConflictPlanA;existence;success&quot;);</span>
+<span class="nc" id="L622">			JOptionPane.showMessageDialog(null, &quot;存在位置独占冲突！&quot;);</span>
+<span class="nc" id="L623">		} else {</span>
+<span class="nc" id="L624">			log.info(&quot;CheckResourcConflictPlanA;inexistence;success&quot;);</span>
+<span class="nc" id="L625">			JOptionPane.showMessageDialog(null, &quot;不存在位置独占冲突！&quot;);</span>
+		}
+<span class="nc" id="L627">	}</span>
+
+	/**
+	 * 用B方式检查是否存在位置冲突
+	 */
+	public void checkConflictPlanB() {
+<span class="nc bnc" id="L633" title="All 2 branches missed.">		if (checkConf.checkLocationConflict(new CheckActivityEntryPlanB&lt;Material&gt;(), board.getActivityEntries())) {</span>
+<span class="nc" id="L634">			log.info(&quot;CheckLocationConflictPlanB;existence;success&quot;);</span>
+<span class="nc" id="L635">			JOptionPane.showMessageDialog(null, &quot;存在位置独占冲突！&quot;);</span>
+<span class="nc" id="L636">		} else {</span>
+<span class="nc" id="L637">			log.info(&quot;CheckResourcConflictPlanB;inexistence;success&quot;);</span>
+<span class="nc" id="L638">			JOptionPane.showMessageDialog(null, &quot;不存在位置独占冲突！&quot;);</span>
+		}
+<span class="nc" id="L640">	}</span>
+
+	/**
+	 * 针对用户选定的某个资源，列出使用该资源的所有计划项
+	 */
+	public void findAllEntryUseResource() {
+<span class="nc" id="L646">		String name = JOptionPane.showInputDialog(&quot;材料的名字：&quot;);</span>
+<span class="nc" id="L647">		String department = JOptionPane.showInputDialog(&quot;材料的发布部门：&quot;);</span>
+<span class="nc" id="L648">		String date = &quot;&quot;;</span>
+<span class="nc bnc" id="L649" title="All 2 branches missed.">		while (!date.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;))</span>
+<span class="nc" id="L650">			date = JOptionPane.showInputDialog(&quot;材料的发布日期,格式yyyy-MM-dd：&quot;);</span>
+<span class="nc" id="L651">		Material material = new Material(name, department, date);</span>
+<span class="nc" id="L652">		String materialInfo = &quot;Name:&quot; + name + &quot;,Department:&quot; + department + &quot;,Date:&quot; + date;</span>
+<span class="nc bnc" id="L653" title="All 2 branches missed.">		if (materials.contains(material)) {</span>
+<span class="nc" id="L654">			log.info(&quot;FindAllEntryUseResource;&quot; + materialInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L655">			JOptionPane.showMessageDialog(null, &quot;此资源不存在！&quot;);</span>
+<span class="nc" id="L656">			return;</span>
+		}
+<span class="nc" id="L658">		List&lt;PlanningEntry&lt;Material&gt;&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L659">		Iterator&lt;PlanningEntry&lt;Material&gt;&gt; iter = board.iterator();</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">		while (iter.hasNext()) {</span>
+<span class="nc" id="L661">			ActivityEntry&lt;Material&gt; ae = (ActivityEntry&lt;Material&gt;) iter.next();</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">			if (((ActivityEntry&lt;Material&gt;) ae).getMaterial().equals(material))</span>
+<span class="nc" id="L663">				list.add(ae);</span>
+		}
+
+<span class="nc" id="L666">		Object[][] str = new Object[list.size()][4];</span>
+<span class="nc bnc" id="L667" title="All 2 branches missed.">		for (int i = 0; i &lt; list.size(); i++) {</span>
+<span class="nc" id="L668">			ActivityEntry&lt;Material&gt; ae = (ActivityEntry&lt;Material&gt;) list.get(i);</span>
+<span class="nc" id="L669">			String[] s = { ae.getName(), ae.getTimeslot().toString(), ae.getLocation().getName(), ae.getState() };</span>
+<span class="nc" id="L670">			str[i] = s;</span>
+		}
+<span class="nc" id="L672">		log.info(&quot;FindAllEntryUseResource;&quot; + materialInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L673">		String[] title = { &quot;Entry&quot;, &quot;Time&quot;, &quot;Location&quot;, &quot;State&quot; };</span>
+<span class="nc" id="L674">		board.visualize(str, title, &quot;使用该资源的所有计划项&quot;);</span>
+<span class="nc" id="L675">	}</span>
+
+	/**
+	 * 选定特定位置，可视化展示当前日期该位置的信息板
+	 */
+	public void findLocation() {
+<span class="nc" id="L681">		String name = JOptionPane.showInputDialog(&quot;地点的名字：&quot;);</span>
+<span class="nc" id="L682">		String date = &quot;&quot;;</span>
+<span class="nc bnc" id="L683" title="All 2 branches missed.">		while (!date.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;))</span>
+<span class="nc" id="L684">			date = JOptionPane.showInputDialog(&quot;日期，格式yyyy-MM-dd：&quot;);</span>
+<span class="nc" id="L685">		Location loc = new Location(name, true);</span>
+<span class="nc bnc" id="L686" title="All 2 branches missed.">		if (!locations.contains(loc)) {</span>
+<span class="nc" id="L687">			log.info(&quot;FindLocation;Name:&quot; + name + &quot;,Date:&quot; + date + &quot;;fail&quot;);</span>
+<span class="nc" id="L688">			JOptionPane.showMessageDialog(null, &quot;无此位置！&quot;);</span>
+<span class="nc" id="L689">			return;</span>
+		}
+<span class="nc" id="L691">		log.info(&quot;FindLocation;Name:&quot; + name + &quot;,Date:&quot; + date + &quot;;success&quot;);</span>
+<span class="nc" id="L692">		board.allEntryAtLocation(loc, date);</span>
+<span class="nc" id="L693">	}</span>
+	
+	/**
+	 * 显示日志
+	 */
+	public void readLog() {
+<span class="nc" id="L699">		Scanner input = null;</span>
+		try {
+<span class="nc" id="L701">			input = new Scanner(new File(&quot;src/log/activitylog.log&quot;));</span>
+<span class="nc" id="L702">		} catch (Exception e) {</span>
+<span class="nc" id="L703">			JOptionPane.showMessageDialog(null, &quot;日志文件错误！&quot;);</span>
+<span class="nc" id="L704">			return;</span>
+		}
+<span class="nc" id="L706">		DateTimeFormatter df = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+<span class="nc" id="L707">		LocalDateTime start = null, end = null;</span>
+<span class="nc" id="L708">		JOptionPane.showMessageDialog(null, &quot;以下四项内容不填或格式不符均视为该项无限制&quot;);</span>
+<span class="nc" id="L709">		String startTime = JOptionPane.showInputDialog(&quot;查询时间段的开始时间\n格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">		if(startTime.matches(&quot;\\d{4}-\\d{2}-\\d{2} \\d{2}-\\{2}&quot;))</span>
+<span class="nc" id="L711">			start = LocalDateTime.parse(startTime, df);</span>
+<span class="nc" id="L712">		String endTime = JOptionPane.showInputDialog(&quot;查询时间段的开始时间\n格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">		if(endTime.matches(&quot;\\d{4}-\\d{2}-\\d{2} \\d{2}-\\{2}&quot;))</span>
+<span class="nc" id="L714">			end = LocalDateTime.parse(endTime, df);</span>
+<span class="nc" id="L715">		String actionType = JOptionPane.showInputDialog(&quot;查询操作类型：&quot;);</span>
+<span class="nc" id="L716">		String entryName = JOptionPane.showInputDialog(&quot;查询计划项名：&quot;);</span>
+		
+<span class="nc" id="L718">		List&lt;String[]&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L719">		DateFormat formatFrom = new SimpleDateFormat(&quot;MMM dd, yyyy KK:mm:ss aa&quot;, Locale.ENGLISH);</span>
+<span class="nc" id="L720">		DateFormat formatTo = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+<span class="nc" id="L721">		DateTimeFormatter df2 = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+		try {
+<span class="nc bnc" id="L723" title="All 2 branches missed.">			while(input.hasNext()) {</span>
+<span class="nc" id="L724">			String[] logline = new String[5];</span>
+<span class="nc" id="L725">			String line1 = input.nextLine();</span>
+<span class="nc" id="L726">			String line2 = input.nextLine();</span>
+<span class="nc" id="L727">			int pos = line1.indexOf(&quot;activity&quot;);</span>
+<span class="nc" id="L728">			logline[0] = line1.substring(0, pos-1);</span>
+<span class="nc" id="L729">			Date date = formatFrom.parse(logline[0]);</span>
+<span class="nc" id="L730">	        LocalDateTime time = LocalDateTime.parse(formatTo.format(date), df2);</span>
+<span class="nc" id="L731">			pos = line2.indexOf(&quot;:&quot;);</span>
+<span class="nc" id="L732">			logline[1] = line2.substring(0, pos);</span>
+<span class="nc" id="L733">			String[] message = line2.substring(pos).split(&quot;;&quot;);</span>
+<span class="nc" id="L734">			logline[2] = message[0];</span>
+<span class="nc" id="L735">			logline[3] = message[1];</span>
+<span class="nc" id="L736">			logline[4] = message[2];</span>
+<span class="nc bnc" id="L737" title="All 8 branches missed.">			if((start != null &amp;&amp; start.isAfter(time)) || (end != null &amp;&amp; end.isBefore(time)))</span>
+<span class="nc" id="L738">				continue;</span>
+<span class="nc bnc" id="L739" title="All 4 branches missed.">			if(actionType != &quot;&quot; &amp;&amp; actionType.equals(logline[2]))</span>
+<span class="nc" id="L740">				continue;</span>
+<span class="nc bnc" id="L741" title="All 4 branches missed.">			if(entryName != &quot;&quot; &amp;&amp; entryName.equals(logline[4]))</span>
+<span class="nc" id="L742">				continue;</span>
+<span class="nc" id="L743">			list.add(logline);</span>
+			}
+<span class="nc" id="L745">		} catch(ParseException e) {</span>
+<span class="nc" id="L746">			return;</span>
+		}
+<span class="nc" id="L748">		input.close();</span>
+<span class="nc" id="L749">		String[] title = {&quot;Time&quot;, &quot;Type&quot;, &quot;Option&quot;, &quot;Message&quot;, &quot;Result&quot;};</span>
+<span class="nc" id="L750">		Object[][] content = new Object[list.size()][5];</span>
+<span class="nc bnc" id="L751" title="All 2 branches missed.">		for(int i = 0; i &lt; list.size(); i++)</span>
+<span class="nc" id="L752">			content[i] = list.get(i);</span>
+<span class="nc" id="L753">		board.visualize(content, title, &quot;log&quot;);</span>
+<span class="nc" id="L754">	}</span>
+
+	/**
+	 * 主程序
+	 */
+	public static void main(String[] args) {
+<span class="nc" id="L760">		new ActivityScheduleApp().run();;</span>
+<span class="nc" id="L761">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

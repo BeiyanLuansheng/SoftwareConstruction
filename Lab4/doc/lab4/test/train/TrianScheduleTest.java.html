@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>TrianScheduleTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">train</a> &gt; <span class="el_source">TrianScheduleTest.java</span></div><h1>TrianScheduleTest.java</h1><pre class="source lang-java linenums">package train;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.rules.ExpectedException;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import exceptions.CannotCancelledException;
+import exceptions.EntryUseResourceOrLocationException;
+import exceptions.ResourceOrLocationConflictException;
+
+import org.junit.Test;
+import org.junit.Rule;
+
+<span class="fc" id="L19">public class TrianScheduleTest {</span>
+	// Test stragey
+	// 测试addCarriage()
+	// 车厢未在列表中，车厢已在列表中
+	// 测试removeCarriage()
+	// 车厢未在列表中，车厢在列表中，车厢正在被使用
+	// 测试addLocation()
+	// 位置未在列表中，位置已在列表中
+	// 测试removeLocation()
+	// 位置未在列表中，位置已在列表中，位置在使用中
+	// 测试addTrain()
+	// 计划项不存在，计划项已存在
+	// 测试cancelTrain()
+	// 计划项为空，计划项不为空可取消，计划项不为空不可取消
+	// 测试allocateTrain()
+	// 可分配资源，状态不允许分配资源，分配后导致与其他计划项产生资源独占冲突
+	
+	
+	@Rule
+<span class="fc" id="L38">	public ExpectedException exception = ExpectedException.none();</span>
+	
+	//test for addCarriage
+	@Test
+	public void testAddCarriage() {
+<span class="fc" id="L43">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L44">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+		//车厢未在列表中
+<span class="fc" id="L46">		assertTrue(tsa.addCarriage(carriage));</span>
+		//车厢已在列表中
+<span class="fc" id="L48">		assertFalse(tsa.addCarriage(carriage));</span>
+<span class="fc" id="L49">	}</span>
+	
+	//tests for removeCarriage
+	@Test
+	public void testRemoveCarriage() throws EntryUseResourceOrLocationException {
+<span class="fc" id="L54">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L55">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+		//车厢未在列表中
+<span class="fc" id="L57">		assertFalse(tsa.removeCarriage(carriage));</span>
+		//车厢已在列表中
+<span class="fc" id="L59">		tsa.addCarriage(carriage);</span>
+<span class="fc" id="L60">		assertTrue(tsa.removeCarriage(carriage));</span>
+<span class="fc" id="L61">	}</span>
+	
+	//车厢正在被使用
+	@Test(expected = EntryUseResourceOrLocationException.class)
+	public void testRemoveCarriageException() throws ResourceOrLocationConflictException, EntryUseResourceOrLocationException {
+<span class="fc" id="L66">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L67">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L68">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L69">		tsa.addCarriage(carriage);</span>
+<span class="fc" id="L70">		train.add(carriage);</span>
+<span class="fc" id="L71">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L72">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L73">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L74">		tsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L75">		tsa.addLocation(departureLoc);</span>
+<span class="fc" id="L76">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L77">		locations.add(departureLoc);</span>
+<span class="fc" id="L78">		locations.add(arrivalLoc);</span>
+<span class="fc" id="L79">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L80">		times.add(&quot;2020-05-27 11:00&quot;);</span>
+<span class="fc" id="L81">		times.add(&quot;2020-05-27 12:00&quot;);</span>
+<span class="fc" id="L82">		tsa.addTrain(name,  locations, times);</span>
+<span class="fc" id="L83">		PlanningEntry&lt;Carriage&gt; fe = tsa.findTrainEntry(name, locations, times);</span>
+<span class="fc" id="L84">		tsa.allocateTrain(fe, train);</span>
+<span class="fc" id="L85">		fe.running();</span>
+<span class="nc" id="L86">		tsa.removeCarriage(carriage);</span>
+<span class="nc" id="L87">	}</span>
+	
+	// tests for addLocation
+	@Test
+	public void testAddLocation() {
+<span class="fc" id="L92">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L93">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+		// 位置不在列表中
+<span class="fc" id="L95">		assertTrue(tsa.addLocation(loc));</span>
+		// 位置已在列表中
+<span class="fc" id="L97">		assertFalse(tsa.addLocation(loc));</span>
+<span class="fc" id="L98">	}</span>
+	
+	// tests for removeLocation
+	@Test
+	public void testRemoveLocation() throws EntryUseResourceOrLocationException {
+<span class="fc" id="L103">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L104">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+		// 位置不在列表中
+<span class="fc" id="L106">		assertFalse(tsa.removeLocation(loc));</span>
+		// 位置已在列表中
+<span class="fc" id="L108">		tsa.addLocation(loc);</span>
+<span class="fc" id="L109">		assertTrue(tsa.removeLocation(loc));</span>
+<span class="fc" id="L110">	}</span>
+	
+	//位置正在被使用
+	@Test(expected = EntryUseResourceOrLocationException.class)
+	public void testRemoveLocationException() throws ResourceOrLocationConflictException, EntryUseResourceOrLocationException {
+<span class="fc" id="L115">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L116">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L117">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L118">		train.add(carriage);</span>
+<span class="fc" id="L119">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L120">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L121">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L122">		tsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L123">		tsa.addLocation(departureLoc);</span>
+<span class="fc" id="L124">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L125">		locations.add(departureLoc);</span>
+<span class="fc" id="L126">		locations.add(arrivalLoc);</span>
+<span class="fc" id="L127">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L128">		times.add(&quot;2020-05-27 11:00&quot;);</span>
+<span class="fc" id="L129">		times.add(&quot;2020-05-27 12:00&quot;);</span>
+<span class="fc" id="L130">		tsa.addTrain(name,  locations, times);</span>
+<span class="fc" id="L131">		PlanningEntry&lt;Carriage&gt; fe = tsa.findTrainEntry(name, locations, times);</span>
+<span class="fc" id="L132">		tsa.allocateTrain(fe, train);</span>
+<span class="fc" id="L133">		fe.running();</span>
+<span class="nc" id="L134">		tsa.removeLocation(departureLoc);</span>
+<span class="nc" id="L135">	}</span>
+	
+	//tests for addTrain
+	@Test
+	public void testAddTrain() {
+<span class="fc" id="L140">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L141">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L142">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L143">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L144">		tsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L145">		tsa.addLocation(departureLoc);</span>
+<span class="fc" id="L146">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L147">		locations.add(departureLoc);</span>
+<span class="fc" id="L148">		locations.add(arrivalLoc);</span>
+<span class="fc" id="L149">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L150">		times.add(&quot;2020-05-27 11:00&quot;);</span>
+<span class="fc" id="L151">		times.add(&quot;2020-05-27 12:00&quot;);</span>
+		//计划项还不存在
+<span class="fc" id="L153">		assertTrue(tsa.addTrain(name, locations, times));</span>
+		//计划项已经存在
+<span class="fc" id="L155">		assertFalse(tsa.addTrain(name, locations, times));</span>
+<span class="fc" id="L156">	}</span>
+	
+	//tests for cancelTrain
+	@Test
+	public void testCancelTrain() throws CannotCancelledException, ResourceOrLocationConflictException {
+<span class="fc" id="L161">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L162">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L163">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L164">		train.add(carriage);</span>
+<span class="fc" id="L165">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L166">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L167">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L168">		tsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L169">		tsa.addLocation(departureLoc);</span>
+<span class="fc" id="L170">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L171">		locations.add(departureLoc);</span>
+<span class="fc" id="L172">		locations.add(arrivalLoc);</span>
+<span class="fc" id="L173">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L174">		times.add(&quot;2020-05-27 11:00&quot;);</span>
+<span class="fc" id="L175">		times.add(&quot;2020-05-27 12:00&quot;);</span>
+<span class="fc" id="L176">		tsa.addTrain(name,  locations, times);</span>
+<span class="fc" id="L177">		PlanningEntry&lt;Carriage&gt; fe = tsa.findTrainEntry(name, locations, times);</span>
+<span class="fc" id="L178">		tsa.allocateTrain(fe, train);</span>
+		//计划项为空
+<span class="fc" id="L180">		assertFalse(tsa.cancelTrain(null));</span>
+		//计划项不为空，可取消
+<span class="fc" id="L182">		assertTrue(tsa.cancelTrain(fe));</span>
+<span class="fc" id="L183">	}</span>
+	
+	//不可取消的计划项
+	@Test(expected = CannotCancelledException.class)
+	public void testCancelTrainException() throws ResourceOrLocationConflictException, CannotCancelledException {
+<span class="fc" id="L188">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L189">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L190">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L191">		train.add(carriage);</span>
+<span class="fc" id="L192">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L193">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L194">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L195">		tsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L196">		tsa.addLocation(departureLoc);</span>
+<span class="fc" id="L197">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L198">		locations.add(departureLoc);</span>
+<span class="fc" id="L199">		locations.add(arrivalLoc);</span>
+<span class="fc" id="L200">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L201">		times.add(&quot;2020-05-27 11:00&quot;);</span>
+<span class="fc" id="L202">		times.add(&quot;2020-05-27 12:00&quot;);</span>
+<span class="fc" id="L203">		tsa.addTrain(name,  locations, times);</span>
+<span class="fc" id="L204">		PlanningEntry&lt;Carriage&gt; fe = tsa.findTrainEntry(name, locations, times);</span>
+<span class="fc" id="L205">		tsa.allocateTrain(fe, train);</span>
+<span class="fc" id="L206">		fe.running();</span>
+<span class="nc" id="L207">		tsa.cancelTrain(fe);</span>
+<span class="nc" id="L208">	}</span>
+	
+	//tests for allocateTrain
+	@Test
+	public void testAllocateTrain() throws ResourceOrLocationConflictException {
+<span class="fc" id="L213">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L214">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L215">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L216">		train.add(carriage);</span>
+<span class="fc" id="L217">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L218">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L219">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L220">		tsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L221">		tsa.addLocation(departureLoc);</span>
+<span class="fc" id="L222">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L223">		locations.add(departureLoc);</span>
+<span class="fc" id="L224">		locations.add(arrivalLoc);</span>
+<span class="fc" id="L225">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L226">		times.add(&quot;2020-05-27 11:00&quot;);</span>
+<span class="fc" id="L227">		times.add(&quot;2020-05-27 12:00&quot;);</span>
+<span class="fc" id="L228">		tsa.addTrain(name,  locations, times);</span>
+<span class="fc" id="L229">		PlanningEntry&lt;Carriage&gt; fe = tsa.findTrainEntry(name, locations, times);</span>
+		//可以被分配资源
+<span class="fc" id="L231">		assertTrue(tsa.allocateTrain(fe, train));</span>
+		//此时状态不可被分配资源
+<span class="fc" id="L233">		fe.running();</span>
+<span class="fc" id="L234">		assertFalse(tsa.allocateTrain(fe, train));</span>
+<span class="fc" id="L235">	}</span>
+	
+	//测试分配后导致与其他计划项产生资源独占冲突
+	@Test(expected = ResourceOrLocationConflictException.class)
+	public void testAllocateTrainException() throws ResourceOrLocationConflictException {
+<span class="fc" id="L240">		TrainScheduleApp tsa = new TrainScheduleApp();</span>
+<span class="fc" id="L241">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L242">		Carriage carriage = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L243">		train.add(carriage);</span>
+<span class="fc" id="L244">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L245">		Location departureLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L246">		Location arrivalLoc  = new Location(&quot;Shanghai&quot;, true);</span>
+<span class="fc" id="L247">		tsa.addLocation(arrivalLoc);</span>
+<span class="fc" id="L248">		tsa.addLocation(departureLoc);</span>
+<span class="fc" id="L249">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L250">		locations.add(departureLoc);</span>
+<span class="fc" id="L251">		locations.add(arrivalLoc);</span>
+<span class="fc" id="L252">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L253">		times.add(&quot;2020-05-27 11:00&quot;);</span>
+<span class="fc" id="L254">		times.add(&quot;2020-05-27 12:00&quot;);	</span>
+		//计划项A使用资源
+<span class="fc" id="L256">		tsa.addTrain(name, locations, times);</span>
+<span class="fc" id="L257">		PlanningEntry&lt;Carriage&gt; fe = tsa.findTrainEntry(name, locations, times);</span>
+<span class="fc" id="L258">		tsa.allocateTrain(fe, train);</span>
+		//计划项B使用资源
+<span class="fc" id="L260">		tsa.addTrain(&quot;B&quot;, locations, times);</span>
+<span class="fc" id="L261">		fe = tsa.findTrainEntry(&quot;B&quot;, locations, times);</span>
+<span class="nc" id="L262">		tsa.allocateTrain(fe, train);</span>
+<span class="nc" id="L263">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

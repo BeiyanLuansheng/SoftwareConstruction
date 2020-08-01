@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>Plane.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">flight</a> &gt; <span class="el_source">Plane.java</span></div><h1>Plane.java</h1><pre class="source lang-java linenums">package flight;
+
+/**
+ * 一个immutable的类型，代表一架飞机
+ */
+<span class="pc bpc" id="L6" title="1 of 2 branches missed.">public class Plane {</span>
+
+	private final String id;
+	private final String type;
+	private final int seats;
+	private final double age;
+
+	// Abstraction function:
+	// AF(id, type, seats, age)=以id为编号，type类型，有seats个座位，机龄为age的一架飞机
+	// Representation invariant:
+	// id != null
+	// type != null
+	// seats &gt; 0
+	// age &gt;= 0
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+
+	/**
+	 * 创建一架飞机
+	 * 
+	 * @param id    飞机的编号，不为null
+	 * @param type  飞机的类型，不为null
+	 * @param seats 飞机的座位数，大于0
+	 * @param age   飞机的机龄，非负
+	 */
+<span class="fc" id="L31">	public Plane(String id, String type, int seats, double age) {</span>
+		// 不满足前置条件，抛出异常
+<span class="pc bpc" id="L33" title="4 of 8 branches missed.">		if (id == null || type == null || seats &lt;= 0 || age &lt; 0)</span>
+<span class="nc" id="L34">			throw new IllegalArgumentException(&quot;参数不合法&quot;);</span>
+<span class="fc" id="L35">		this.id = id;</span>
+<span class="fc" id="L36">		this.type = type;</span>
+<span class="fc" id="L37">		this.seats = seats;</span>
+<span class="fc" id="L38">		this.age = age;</span>
+<span class="fc" id="L39">		checkRep();</span>
+<span class="fc" id="L40">	}</span>
+
+	/**
+	 * 检查不变性
+	 */
+	private void checkRep() {
+<span class="pc bpc" id="L46" title="2 of 4 branches missed.">		assert this.id != null;</span>
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">		assert this.type != null;</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">		assert this.seats &gt; 0;</span>
+<span class="pc bpc" id="L49" title="2 of 4 branches missed.">		assert this.age &gt;= 0;</span>
+<span class="fc" id="L50">	}</span>
+
+	/**
+	 * 获得飞机的编号
+	 * 
+	 * @return 一个表示飞机编号的字符串
+	 */
+	public String getID() {
+<span class="fc" id="L58">		checkRep();</span>
+<span class="fc" id="L59">		return id;</span>
+	}
+
+	/**
+	 * 获得飞机的类型
+	 * 
+	 * @return 一个表示类型的字符串
+	 */
+	public String getType() {
+<span class="fc" id="L68">		checkRep();</span>
+<span class="fc" id="L69">		return type;</span>
+	}
+
+	/**
+	 * 获得飞机的座位数
+	 * 
+	 * @return 一个大于零的整数
+	 */
+	public int getSeats() {
+<span class="fc" id="L78">		checkRep();</span>
+<span class="fc" id="L79">		return seats;</span>
+	}
+
+	/**
+	 * 获得飞机的机龄
+	 * 
+	 * @return 一个非负的小数
+	 */
+	public double getAge() {
+<span class="fc" id="L88">		checkRep();</span>
+<span class="fc" id="L89">		return age;</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="fc" id="L94">		return getID().hashCode();</span>
+	}
+
+	@Override
+	public boolean equals(Object plane) {
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">		if (plane instanceof Plane) {</span>
+<span class="fc" id="L100">			Plane p = (Plane) plane;</span>
+<span class="pc bpc" id="L101" title="2 of 8 branches missed.">			if (this.id.equals(p.id) &amp;&amp; this.type.equals(p.type) &amp;&amp; this.seats == p.seats &amp;&amp; this.age - p.age &lt; 0.1)</span>
+<span class="fc" id="L102">				return true;</span>
+		}
+<span class="fc" id="L104">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

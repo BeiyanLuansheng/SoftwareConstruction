@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>TrainScheduleApp.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">train</a> &gt; <span class="el_source">TrainScheduleApp.java</span></div><h1>TrainScheduleApp.java</h1><pre class="source lang-java linenums">package train;
+
+import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+import common.conflict.PlanningEntryAPIs;
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.time.Timeslot;
+import exceptions.*;
+
+/**
+ * 高铁车次管理应用
+ */
+public class TrainScheduleApp {
+<span class="fc" id="L41">	private final JFrame frame = new JFrame();</span>
+<span class="fc" id="L42">	private final JPanel buttonPanel = new JPanel();</span>
+<span class="fc" id="L43">	private final Set&lt;Location&gt; locations = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L44">	private final Set&lt;Carriage&gt; carriages = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L45">	private final Board&lt;Carriage&gt; board = new Board&lt;&gt;();</span>
+<span class="fc" id="L46">	private final PlanningEntryAPIs&lt;Carriage&gt; checkConf = new PlanningEntryAPIs&lt;&gt;();</span>
+<span class="fc" id="L47">	private final Logger log = Logger.getLogger(TrainScheduleApp.class.getName());</span>
+
+<span class="fc" id="L49">	public TrainScheduleApp() {</span>
+		try {
+<span class="fc" id="L51">			new FileWriter(&quot;src/log/trainlog.log&quot;).close();</span>
+<span class="fc" id="L52">			Locale.setDefault(new Locale(&quot;en&quot;, &quot;EN&quot;));</span>
+<span class="fc" id="L53">			log.setLevel(Level.INFO);</span>
+<span class="fc" id="L54">			FileHandler fh = new FileHandler(&quot;src/log/trainlog.log&quot;, true);</span>
+<span class="fc" id="L55">			fh.setFormatter(new SimpleFormatter());</span>
+<span class="fc" id="L56">			log.addHandler(fh);</span>
+<span class="pc" id="L57">		} catch(Exception e) {</span>
+<span class="nc" id="L58">			e.printStackTrace();</span>
+		}
+<span class="fc" id="L60">	}</span>
+	
+	/**
+	 * 操作面板
+	 */
+	public void run() {
+<span class="nc" id="L66">		buttonPanel.setLayout(new GridLayout(8, 2));</span>
+
+<span class="nc" id="L68">		JButton addCarriage = new JButton(&quot;Add Carriage&quot;);</span>
+<span class="nc" id="L69">		buttonPanel.add(addCarriage);</span>
+<span class="nc" id="L70">		addCarriage.addActionListener(event -&gt; addCarriage());</span>
+
+<span class="nc" id="L72">		JButton removeCarriage = new JButton(&quot;Remove Carriage&quot;);</span>
+<span class="nc" id="L73">		buttonPanel.add(removeCarriage);</span>
+<span class="nc" id="L74">		removeCarriage.addActionListener(event -&gt; removeCarriage());</span>
+
+<span class="nc" id="L76">		JButton addLocation = new JButton(&quot;Add Location&quot;);</span>
+<span class="nc" id="L77">		buttonPanel.add(addLocation);</span>
+<span class="nc" id="L78">		addLocation.addActionListener(event -&gt; addLocation());</span>
+
+<span class="nc" id="L80">		JButton removeLocation = new JButton(&quot;Remove Location&quot;);</span>
+<span class="nc" id="L81">		buttonPanel.add(removeLocation);</span>
+<span class="nc" id="L82">		removeLocation.addActionListener(event -&gt; removeLocation());</span>
+
+<span class="nc" id="L84">		JButton addTrain = new JButton(&quot;Add TrainEntry&quot;);</span>
+<span class="nc" id="L85">		buttonPanel.add(addTrain);</span>
+<span class="nc" id="L86">		addTrain.addActionListener(event -&gt; addTrain());</span>
+
+<span class="nc" id="L88">		JButton cancelTrain = new JButton(&quot;Cancel TrainEntry&quot;);</span>
+<span class="nc" id="L89">		buttonPanel.add(cancelTrain);</span>
+<span class="nc" id="L90">		cancelTrain.addActionListener(event -&gt; cancelTrain());</span>
+
+<span class="nc" id="L92">		JButton allocateTrain = new JButton(&quot;Allocate TrainEntry&quot;);</span>
+<span class="nc" id="L93">		buttonPanel.add(allocateTrain);</span>
+<span class="nc" id="L94">		allocateTrain.addActionListener(event -&gt; allocateTrain());</span>
+
+<span class="nc" id="L96">		JButton runTrain = new JButton(&quot;Run TrainEntry&quot;);</span>
+<span class="nc" id="L97">		buttonPanel.add(runTrain);</span>
+<span class="nc" id="L98">		runTrain.addActionListener(event -&gt; runTrain());</span>
+
+<span class="nc" id="L100">		JButton blockTrain = new JButton(&quot;Block TrainEntry&quot;);</span>
+<span class="nc" id="L101">		buttonPanel.add(blockTrain);</span>
+<span class="nc" id="L102">		blockTrain.addActionListener(event -&gt; blockTrain());</span>
+
+<span class="nc" id="L104">		JButton endTrain = new JButton(&quot;End TrainEntry&quot;);</span>
+<span class="nc" id="L105">		buttonPanel.add(endTrain);</span>
+<span class="nc" id="L106">		endTrain.addActionListener(event -&gt; endTrain());</span>
+
+<span class="nc" id="L108">		JButton getState = new JButton(&quot;Get Entry State&quot;);</span>
+<span class="nc" id="L109">		buttonPanel.add(getState);</span>
+<span class="nc" id="L110">		getState.addActionListener(event -&gt; getState());</span>
+
+<span class="nc" id="L112">		JButton checkConflict = new JButton(&quot;Check Resource Conflict&quot;);</span>
+<span class="nc" id="L113">		buttonPanel.add(checkConflict);</span>
+<span class="nc" id="L114">		checkConflict.addActionListener(event -&gt; checkConflict());</span>
+
+<span class="nc" id="L116">		JButton findEntryUseResource = new JButton(&quot;Find All Entry Use Resource&quot;);</span>
+<span class="nc" id="L117">		buttonPanel.add(findEntryUseResource);</span>
+<span class="nc" id="L118">		findEntryUseResource.addActionListener(event -&gt; findAllEntryUseResource());</span>
+
+<span class="nc" id="L120">		JButton findResource = new JButton(&quot;Find PreEntry Use Resource&quot;);</span>
+<span class="nc" id="L121">		buttonPanel.add(findResource);</span>
+<span class="nc" id="L122">		findResource.addActionListener(event -&gt; findPreEntryUseResource());</span>
+
+<span class="nc" id="L124">		JButton findLocation = new JButton(&quot;Find Entry At Location&quot;);</span>
+<span class="nc" id="L125">		buttonPanel.add(findLocation);</span>
+<span class="nc" id="L126">		findLocation.addActionListener(event -&gt; findLocation());</span>
+
+<span class="nc" id="L128">		JButton readLog = new JButton(&quot;Read log file&quot;);</span>
+<span class="nc" id="L129">		buttonPanel.add(readLog);</span>
+<span class="nc" id="L130">		readLog.addActionListener(event -&gt; readLog());</span>
+		
+<span class="nc" id="L132">		frame.add(buttonPanel);</span>
+<span class="nc" id="L133">		frame.pack();</span>
+<span class="nc" id="L134">		frame.setVisible(true);</span>
+<span class="nc" id="L135">		frame.addWindowListener(new WindowAdapter() {</span>
+			@Override
+			public void windowClosing(WindowEvent e) {
+<span class="nc" id="L138">				System.exit(0);</span>
+<span class="nc" id="L139">			}</span>
+		});
+<span class="nc" id="L141">	}</span>
+
+	/**
+	 * 添加可用车厢资源
+	 */
+	public void addCarriage() {
+<span class="nc" id="L147">		String id = JOptionPane.showInputDialog(&quot;车厢的编号：&quot;);</span>
+<span class="nc" id="L148">		String type = JOptionPane.showInputDialog(&quot;车厢的型号：&quot;);</span>
+<span class="nc" id="L149">		String seats = JOptionPane.showInputDialog(&quot;车厢的定员数：&quot;);</span>
+<span class="nc" id="L150">		String manufactureYear = JOptionPane.showInputDialog(&quot;车厢的生产年份：&quot;);</span>
+<span class="nc" id="L151">		Carriage carriage = new Carriage(Integer.parseInt(id), type, Integer.parseInt(seats),</span>
+<span class="nc" id="L152">				Integer.parseInt(manufactureYear));</span>
+<span class="nc" id="L153">		String carriageInfo = &quot;Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,ManufactureYear:&quot;</span>
+<span class="nc" id="L154">				+ manufactureYear;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (addCarriage(carriage)) {</span>
+<span class="nc" id="L156">			log.info(&quot;AddCarriage;&quot; + carriageInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L157">			JOptionPane.showMessageDialog(null, &quot;此车厢已存在！&quot;);</span>
+<span class="nc" id="L158">		} else {</span>
+<span class="nc" id="L159">			log.info(&quot;AddCarriage;&quot; + carriageInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L160">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+		}
+<span class="nc" id="L162">	}</span>
+
+	/**
+	 * 添加可用车厢的功能实现
+	 * 
+	 * @param carriage 车厢
+	 * @return true 成功;false 已存在，失败
+	 */
+	public boolean addCarriage(Carriage carriage) {
+<span class="fc bfc" id="L171" title="All 2 branches covered.">		if (carriages.contains(carriage))</span>
+<span class="fc" id="L172">			return false;</span>
+		else {
+<span class="fc" id="L174">			carriages.add(carriage);</span>
+<span class="fc" id="L175">			return true;</span>
+		}
+	}
+
+	/**
+	 * 删除不可用车厢资源
+	 */
+	public void removeCarriage() {
+<span class="nc" id="L183">		String id = JOptionPane.showInputDialog(&quot;车厢的编号：&quot;);</span>
+<span class="nc" id="L184">		String type = JOptionPane.showInputDialog(&quot;车厢的型号：&quot;);</span>
+<span class="nc" id="L185">		String seats = JOptionPane.showInputDialog(&quot;车厢的定员数：&quot;);</span>
+<span class="nc" id="L186">		String manufactureYear = JOptionPane.showInputDialog(&quot;车厢的生产年份：&quot;);</span>
+<span class="nc" id="L187">		Carriage carriage = new Carriage(Integer.parseInt(id), type, Integer.parseInt(seats),</span>
+<span class="nc" id="L188">				Integer.parseInt(manufactureYear));</span>
+<span class="nc" id="L189">		String carriageInfo = &quot;Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,ManufactureYear:&quot;</span>
+<span class="nc" id="L190">				+ manufactureYear;</span>
+		try {
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			if (removeCarriage(carriage)) {</span>
+<span class="nc" id="L193">				log.info(&quot;RemoveCarriage;&quot; + carriageInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L194">				JOptionPane.showMessageDialog(null, &quot;删除成功！&quot;);</span>
+<span class="nc" id="L195">			} else {</span>
+<span class="nc" id="L196">				log.info(&quot;RemoveCarriage;&quot; + carriageInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L197">				JOptionPane.showMessageDialog(null, &quot;此车厢不存在！&quot;);</span>
+			}
+<span class="nc" id="L199">		} catch (EntryUseResourceOrLocationException e) {</span>
+<span class="nc" id="L200">			log.info(&quot;RemoveCarriage;&quot; + carriageInfo + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新指定资源？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L202">				log.warning(</span>
+<span class="nc" id="L203">						&quot;RemoveCarriage;EntryUseResourceOrLocationException:TrainScheduleApp.removeCarriage(carriage);reselect resource&quot;);</span>
+<span class="nc" id="L204">				removeCarriage();</span>
+<span class="nc" id="L205">			} else</span>
+<span class="nc" id="L206">				log.warning(</span>
+<span class="nc" id="L207">						&quot;RemoveCarriage;EntryUseResourceOrLocationException:TrainScheduleApp.removeCarriage(carriage);end&quot;);</span>
+		}
+<span class="nc" id="L209">	}</span>
+
+	/**
+	 * 删除不可用资源的功能实现部分
+	 * 
+	 * @param carriage 待删除的资源
+	 * @return true 删除成功;false 不存在
+	 * @throws EntryUseResourceOrLocationException 资源被使用中
+	 */
+	public boolean removeCarriage(Carriage carriage) throws EntryUseResourceOrLocationException {
+<span class="fc bfc" id="L219" title="All 2 branches covered.">		if (carriages.contains(carriage)) {</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">			for (PlanningEntry&lt;Carriage&gt; pe : board.getTrainEntries())</span>
+<span class="pc bpc" id="L221" title="2 of 4 branches missed.">				if (((TrainEntry&lt;Carriage&gt;) pe).getResources().contains(carriage) &amp;&amp; !pe.getState().equals(&quot;ENDED&quot;))</span>
+<span class="fc" id="L222">					throw new EntryUseResourceOrLocationException(&quot;计划项&quot; + pe.getName() + &quot;正在使用该资源，不能删除&quot;);</span>
+<span class="fc" id="L223">			carriages.remove(carriage);</span>
+<span class="fc" id="L224">			return true;</span>
+		} else
+<span class="fc" id="L226">			return false;</span>
+	}
+
+	/**
+	 * 添加可用位置
+	 */
+	public void addLocation() {
+<span class="nc" id="L233">		String name = JOptionPane.showInputDialog(&quot;车站名称：&quot;);</span>
+<span class="nc" id="L234">		Location loc = new Location(name, true);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">		if (addLocation(loc)) {</span>
+<span class="nc" id="L236">			log.info(&quot;AddLocation;Name:&quot; + name + &quot;;success&quot;);</span>
+<span class="nc" id="L237">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L238">		} else {</span>
+<span class="nc" id="L239">			log.info(&quot;AddLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc" id="L240">			JOptionPane.showMessageDialog(null, &quot;此车站已存在！&quot;);</span>
+		}
+<span class="nc" id="L242">	}</span>
+
+	/**
+	 * 添加可用位置的功能实现部分
+	 * 
+	 * @param loc 待添加的位置
+	 * @return true 添加成功;false 位置已存在
+	 */
+	public boolean addLocation(Location loc) {
+<span class="fc bfc" id="L251" title="All 2 branches covered.">		if (locations.contains(loc))</span>
+<span class="fc" id="L252">			return false;</span>
+		else {
+<span class="fc" id="L254">			locations.add(loc);</span>
+<span class="fc" id="L255">			return true;</span>
+		}
+	}
+
+	/**
+	 * 删除不可用的位置
+	 */
+	public void removeLocation() {
+<span class="nc" id="L263">		String name = JOptionPane.showInputDialog(&quot;车站名称：&quot;);</span>
+<span class="nc" id="L264">		Location loc = new Location(name, true);</span>
+		try {
+<span class="nc bnc" id="L266" title="All 2 branches missed.">			if (removeLocation(loc)) {</span>
+<span class="nc" id="L267">				log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;success&quot;);</span>
+<span class="nc" id="L268">				JOptionPane.showMessageDialog(null, &quot;删除成功！&quot;);</span>
+<span class="nc" id="L269">			} else {</span>
+<span class="nc" id="L270">				log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc" id="L271">				JOptionPane.showMessageDialog(null, &quot;此车站不存在！&quot;);</span>
+			}
+<span class="nc" id="L273">		} catch (EntryUseResourceOrLocationException e) {</span>
+<span class="nc" id="L274">			log.info(&quot;RemoveLocation;Name:&quot; + name + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新指定位置？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L276">				log.warning(</span>
+<span class="nc" id="L277">						&quot;RemoveLocation;EntryUseResourceOrLocationException:TrainScheduleApp.removeLocation(loc);reselect location&quot;);</span>
+<span class="nc" id="L278">				removeLocation();</span>
+<span class="nc" id="L279">			} else</span>
+<span class="nc" id="L280">				log.warning(</span>
+<span class="nc" id="L281">						&quot;RemoveLocation;EntryUseResourceOrLocationException:TrainScheduleApp.removeLocation(loc);end&quot;);</span>
+		}
+
+<span class="nc" id="L284">	}</span>
+
+	/**
+	 * 删除不可用的位置的功能实现部分
+	 * 
+	 * @param loc 待删除的位置
+	 * @return true 删除成功;false 不存在位置
+	 * @throws EntryUseResourceOrLocationException 有计划项在使用该位置
+	 */
+	public boolean removeLocation(Location loc) throws EntryUseResourceOrLocationException {
+<span class="fc bfc" id="L294" title="All 2 branches covered.">		if (locations.contains(loc)) {</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">			for (PlanningEntry&lt;Carriage&gt; pe : board.getTrainEntries())</span>
+<span class="pc bpc" id="L296" title="2 of 4 branches missed.">				if (((TrainEntry&lt;Carriage&gt;) pe).getLocations().contains(loc) &amp;&amp; !pe.getState().equals(&quot;ENDED&quot;))</span>
+<span class="fc" id="L297">					throw new EntryUseResourceOrLocationException(&quot;计划项&quot; + pe.getName() + &quot;正在使用该位置，不可删除&quot;);</span>
+<span class="fc" id="L298">			locations.remove(loc);</span>
+<span class="fc" id="L299">			return true;</span>
+		} else
+<span class="fc" id="L301">			return false;</span>
+	}
+
+	/**
+	 * 找到指定的车次计划项
+	 * 
+	 * @return 非空 相应的车次计划项 null 没有相应的车次计划项
+	 */
+	private PlanningEntry&lt;Carriage&gt; findTrainEntry(StringBuilder trainInfo) {
+<span class="nc" id="L310">		String name = JOptionPane.showInputDialog(&quot;车次号：&quot;);</span>
+<span class="nc" id="L311">		List&lt;String&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L312">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L313">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc" id="L314">		String num = JOptionPane.showInputDialog(&quot;经过的车站个数:&quot;);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">		for (int i = 1; i &lt; Integer.parseInt(num); i++) {</span>
+<span class="nc" id="L316">			String info = JOptionPane.showInputDialog(&quot;经过的第&quot; + i + &quot;个车站:&quot;);</span>
+<span class="nc" id="L317">			locations.add(info);</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			while (!info.matches(regex))</span>
+<span class="nc" id="L319">				info = JOptionPane.showInputDialog(&quot;出站时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L320">			times.add(info);</span>
+<span class="nc" id="L321">			info = &quot;&quot;;</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">			while (!info.matches(regex))</span>
+<span class="nc" id="L323">				info = JOptionPane.showInputDialog(&quot;下一站进站站时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L324">			times.add(info);</span>
+		}
+<span class="nc" id="L326">		String info = JOptionPane.showInputDialog(&quot;经过的最后一个车站:&quot;);</span>
+<span class="nc" id="L327">		locations.add(info);</span>
+<span class="nc" id="L328">		trainInfo.append(&quot;Entry:&quot; + name);</span>
+<span class="nc" id="L329">		trainInfo.append(&quot;,Departure&quot; + locations.get(0));</span>
+<span class="nc" id="L330">		trainInfo.append(&quot;,Arrival:&quot; + locations.get(locations.size() - 1));</span>
+<span class="nc" id="L331">		trainInfo.append(&quot;,StartTime:&quot; + times.get(0));</span>
+<span class="nc" id="L332">		trainInfo.append(&quot;,EndTime:&quot; + times.get(times.size() - 1));</span>
+
+<span class="nc" id="L334">		List&lt;Location&gt; locs = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">		for (String l : locations)</span>
+<span class="nc" id="L336">			locs.add(new Location(l, true));</span>
+		
+<span class="nc" id="L338">		return findTrainEntry(name, locs, times);</span>
+	}
+
+	/**
+	 * 找到指定的车次计划项
+	 * @param name 计划项名
+	 * @param locs 位置列表
+	 * @param times 时间表
+	 * @return 非空 相应的车次计划项 null 没有相应的车次计划项
+	 */
+	public PlanningEntry&lt;Carriage&gt; findTrainEntry(String name, List&lt;Location&gt; locs, List&lt;String&gt; times){
+<span class="fc" id="L349">		List&lt;Timeslot&gt; t = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">		for (int i = 0; i &lt; times.size(); i += 2)</span>
+<span class="fc" id="L351">			t.add(new Timeslot(times.get(i), times.get(i + 1)));</span>
+<span class="fc" id="L352">		Iterator&lt;PlanningEntry&lt;Carriage&gt;&gt; iter = board.iterator();</span>
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">		while (iter.hasNext()) {</span>
+<span class="fc" id="L354">			TrainEntry&lt;Carriage&gt; te = (TrainEntry&lt;Carriage&gt;) iter.next();</span>
+<span class="pc bpc" id="L355" title="2 of 6 branches missed.">			if (te.getName().equals(name) &amp;&amp; te.getLocations().equals(locs) &amp;&amp; te.getTimeslot().equals(t))</span>
+<span class="fc" id="L356">				return te;</span>
+		}
+<span class="nc" id="L358">		return null;</span>
+	}
+
+	/**
+	 * 增加一条新的计划项
+	 */
+	public void addTrain() {
+<span class="nc" id="L365">		String name = JOptionPane.showInputDialog(&quot;车次号：&quot;);</span>
+<span class="nc" id="L366">		List&lt;String&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L367">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L368">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc" id="L369">		String num = JOptionPane.showInputDialog(&quot;经过的车站个数:&quot;);</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">		for (int i = 1; i &lt; Integer.parseInt(num); i++) {</span>
+<span class="nc" id="L371">			String info = JOptionPane.showInputDialog(&quot;经过的第&quot; + i + &quot;个车站:&quot;);</span>
+<span class="nc" id="L372">			locations.add(info);</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">			while (!info.matches(regex))</span>
+<span class="nc" id="L374">				info = JOptionPane.showInputDialog(&quot;出站时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L375">			times.add(info);</span>
+<span class="nc" id="L376">			info = &quot;&quot;;</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			while (!info.matches(regex))</span>
+<span class="nc" id="L378">				info = JOptionPane.showInputDialog(&quot;下一站进站站时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L379">			times.add(info);</span>
+		}
+<span class="nc" id="L381">		String info = JOptionPane.showInputDialog(&quot;经过的最后一个车站:&quot;);</span>
+<span class="nc" id="L382">		locations.add(info);</span>
+<span class="nc" id="L383">		String trainInfo = &quot;Entry:&quot; + name + &quot;,Departure&quot; + locations.get(0) + &quot;,Arrival:&quot;</span>
+<span class="nc" id="L384">				+ locations.get(locations.size() - 1) + &quot;,StartTime:&quot; + times.get(0) + &quot;,EndTime:&quot;</span>
+<span class="nc" id="L385">				+ times.get(times.size() - 1);</span>
+		// 在可用位置列表中寻找位置
+<span class="nc" id="L387">		List&lt;Location&gt; locationList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L388">		Iterator&lt;String&gt; locIter = locations.iterator();</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		while (locIter.hasNext()) {</span>
+<span class="nc" id="L390">			String tempLoc = locIter.next();</span>
+<span class="nc" id="L391">			boolean isFind = false;</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">			for (Location loc : this.locations) {</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">				if (loc.getName().equals(tempLoc)) {</span>
+<span class="nc" id="L394">					locationList.add(loc);</span>
+<span class="nc" id="L395">					isFind = true;</span>
+<span class="nc" id="L396">					break;</span>
+				}
+			}
+<span class="nc bnc" id="L399" title="All 2 branches missed.">			if (!isFind) {</span>
+<span class="nc" id="L400">				log.info(&quot;AddTrain;&quot; + trainInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L401">				JOptionPane.showMessageDialog(null, &quot;无位置，添加失败！&quot;);</span>
+<span class="nc" id="L402">				return;</span>
+			}
+		}
+
+<span class="nc bnc" id="L406" title="All 2 branches missed.">		if (addTrain(name, locationList, times)) {</span>
+<span class="nc" id="L407">			log.info(&quot;AddTrain;&quot; + trainInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L408">			JOptionPane.showMessageDialog(null, &quot;添加成功！&quot;);</span>
+<span class="nc" id="L409">		} else {</span>
+<span class="nc" id="L410">			log.info(&quot;AddTrain;&quot; + trainInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L411">			JOptionPane.showMessageDialog(null, &quot;已有该计划项，添加失败！&quot;);</span>
+		}
+<span class="nc" id="L413">	}</span>
+
+	/**
+	 * 增加一条新的计划项的功能实现部分
+	 * 
+	 * @param name      车次，非空
+	 * @param locations 车站列表，非空
+	 * @param times     时间表，非空
+	 * @return true 添加成功;false 计划项已存在
+	 */
+	public boolean addTrain(String name, List&lt;Location&gt; locations, List&lt;String&gt; times) {
+<span class="fc" id="L424">		List&lt;Timeslot&gt; t = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">		for (int i = 0; i &lt; times.size(); i += 2)</span>
+<span class="fc" id="L426">			t.add(new Timeslot(times.get(i), times.get(i + 1)));</span>
+<span class="fc" id="L427">		Iterator&lt;PlanningEntry&lt;Carriage&gt;&gt; iter = board.iterator();</span>
+<span class="fc bfc" id="L428" title="All 2 branches covered.">		while (iter.hasNext()) {</span>
+<span class="fc" id="L429">			TrainEntry&lt;Carriage&gt; te = (TrainEntry&lt;Carriage&gt;) iter.next();</span>
+<span class="pc bpc" id="L430" title="2 of 6 branches missed.">			if (te.getName().equals(name) &amp;&amp; te.getLocations().equals(locations) &amp;&amp; te.getTimeslot().equals(t)) {</span>
+<span class="fc" id="L431">				return false;</span>
+			}
+		}
+<span class="fc" id="L434">		PlanningEntry&lt;Carriage&gt; trainEntry = PlanningEntry.trainEntry(name, locations, times);</span>
+<span class="fc" id="L435">		board.addTrainEntry(trainEntry);</span>
+<span class="fc" id="L436">		return true;</span>
+	}
+
+	/**
+	 * 取消某个计划项
+	 */
+	public void cancelTrain() {
+<span class="nc" id="L443">		StringBuilder trainInfo = new StringBuilder();</span>
+<span class="nc" id="L444">		PlanningEntry&lt;Carriage&gt; te = findTrainEntry(trainInfo);</span>
+		try {
+<span class="nc bnc" id="L446" title="All 2 branches missed.">			if (cancelTrain(te)) {</span>
+<span class="nc" id="L447">				log.info(&quot;CancelTrain;&quot; + trainInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L448">				JOptionPane.showMessageDialog(null, &quot;取消成功！&quot;);</span>
+<span class="nc" id="L449">			} else {</span>
+<span class="nc" id="L450">				log.info(&quot;CancelTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L451">				JOptionPane.showMessageDialog(null, &quot;取消失败！&quot;);</span>
+			}
+<span class="nc" id="L453">		} catch (CannotCancelledException e) {</span>
+<span class="nc" id="L454">			log.info(&quot;CancelTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc bnc" id="L455" title="All 2 branches missed.">			if (JOptionPane.showConfirmDialog(null, e.getMessage() + &quot;\n重新选择取消的计划项？&quot;) == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L456">				log.warning(&quot;CancelTrain;CannotCancelledException:TrainScheduleApp.cancelTrain(te);reselect entry&quot;);</span>
+<span class="nc" id="L457">				cancelTrain();</span>
+<span class="nc" id="L458">			} else</span>
+<span class="nc" id="L459">				log.warning(&quot;CancelTrain;CannotCancelledException:TrainScheduleApp.cancelTrain(te);end&quot;);</span>
+		}
+<span class="nc" id="L461">	}</span>
+
+	/**
+	 * 取消计划项功能实现部分
+	 * 
+	 * @param te 取消的计划项
+	 * @return true 取消成功;false 取消失败，计划项为空
+	 * @throws CannotCancelledException 当前计划项状态不可取消
+	 */
+	public boolean cancelTrain(PlanningEntry&lt;Carriage&gt; te) throws CannotCancelledException {
+<span class="fc bfc" id="L471" title="All 2 branches covered.">		if (te == null)</span>
+<span class="fc" id="L472">			return false;</span>
+<span class="fc bfc" id="L473" title="All 2 branches covered.">		if (te.cancel())</span>
+<span class="fc" id="L474">			return true;</span>
+		else
+<span class="fc" id="L476">			throw new CannotCancelledException(&quot;当前状态不可取消！&quot;);</span>
+	}
+
+	/**
+	 * 为某个计划项分配资源
+	 */
+	public void allocateTrain() {
+<span class="nc" id="L483">		StringBuilder trainInfo = new StringBuilder();</span>
+<span class="nc" id="L484">		PlanningEntry&lt;Carriage&gt; te = findTrainEntry(trainInfo);</span>
+		// 车厢资源
+<span class="nc" id="L486">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L487">		String carriageNum = JOptionPane.showInputDialog(&quot;车厢节数：&quot;);</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">		for (int i = 0; i &lt; Integer.parseInt(carriageNum); i++) {</span>
+<span class="nc" id="L489">			String id = JOptionPane.showInputDialog(&quot;车厢的编号：&quot;);</span>
+<span class="nc" id="L490">			String type = JOptionPane.showInputDialog(&quot;车厢的型号：&quot;);</span>
+<span class="nc" id="L491">			String seats = JOptionPane.showInputDialog(&quot;车厢的定员数：&quot;);</span>
+<span class="nc" id="L492">			String manufactureYear = JOptionPane.showInputDialog(&quot;车厢的生产年份：&quot;);</span>
+<span class="nc" id="L493">			Carriage carriage = new Carriage(Integer.parseInt(id), type, Integer.parseInt(seats),</span>
+<span class="nc" id="L494">					Integer.parseInt(manufactureYear));</span>
+<span class="nc" id="L495">			train.add(carriage);</span>
+		}
+		// 确保车厢资源都是可用的
+<span class="nc bnc" id="L498" title="All 2 branches missed.">		for (Carriage carriage : train)</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">			if (!this.carriages.contains(carriage)) {</span>
+<span class="nc" id="L500">				log.info(&quot;AllocateTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L501">				JOptionPane.showMessageDialog(null, &quot;没有该资源，资源分配失败！&quot;);</span>
+<span class="nc" id="L502">				return;</span>
+			}
+		try {
+<span class="nc bnc" id="L505" title="All 2 branches missed.">			if (te == null) {</span>
+<span class="nc" id="L506">				log.info(&quot;AllocateTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L507">				JOptionPane.showMessageDialog(null, &quot;没有该计划项，资源分配失败！&quot;);</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">			} else if (allocateTrain(te, train)) {</span>
+<span class="nc" id="L509">				log.info(&quot;AllocateTrain;&quot; + trainInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L510">				JOptionPane.showMessageDialog(null, &quot;资源分配成功！&quot;);</span>
+<span class="nc" id="L511">			} else {</span>
+<span class="nc" id="L512">				log.info(&quot;AllocateTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L513">				JOptionPane.showMessageDialog(null, &quot;当前状态不可分配资源！&quot;);</span>
+			}
+<span class="nc" id="L515">		} catch (ResourceOrLocationConflictException e) {</span>
+<span class="nc" id="L516">			log.info(&quot;AllocateTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L517">			JOptionPane.showMessageDialog(null, e.getMessage() + &quot;\n请重新分配资源&quot;);</span>
+<span class="nc" id="L518">			log.warning(</span>
+<span class="nc" id="L519">					&quot;AllocateTrain;ResourceOrLocationConflictException:TrainScheduleApp.allocateTrain(te,train);reallocate&quot;);</span>
+<span class="nc" id="L520">			allocateTrain();</span>
+		}
+<span class="nc" id="L522">	}</span>
+
+	/**
+	 * 为计划项分配资源的功能实现部分
+	 * 
+	 * @param te    待分配的计划项
+	 * @param train 待分配的资源
+	 * @return 分配成功; false 分配失败，计划项状态不能分配资源
+	 * @throws ResourceOrLocationConflictException 分配后导致与其他计划项产生资源独占冲突
+	 */
+	public boolean allocateTrain(PlanningEntry&lt;Carriage&gt; te, List&lt;Carriage&gt; train)
+			throws ResourceOrLocationConflictException {
+<span class="fc bfc" id="L534" title="All 2 branches covered.">		if (((TrainEntry&lt;Carriage&gt;) te).allocateTrain(train)) {</span>
+<span class="fc bfc" id="L535" title="All 2 branches covered.">			if (checkConf.checkResourceExclusiveConflict(board.getTrainEntries()))</span>
+<span class="fc" id="L536">				throw new ResourceOrLocationConflictException(&quot;分配后导致与其他计划项产生资源独占冲突&quot;);</span>
+<span class="fc" id="L537">			return true;</span>
+		} else
+<span class="fc" id="L539">			return false;</span>
+	}
+
+	/**
+	 * 启动某个计划项
+	 */
+	public void runTrain() {
+<span class="nc" id="L546">		StringBuilder trainInfo = new StringBuilder();</span>
+<span class="nc" id="L547">		PlanningEntry&lt;Carriage&gt; te = findTrainEntry(trainInfo);</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">		if (te == null) {</span>
+<span class="nc" id="L549">			log.info(&quot;RunTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L550">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，启动失败！&quot;);</span>
+<span class="nc" id="L551">		}</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">		else if (te.running()) {</span>
+<span class="nc" id="L553">			log.info(&quot;RunTrain;&quot; + trainInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L554">			JOptionPane.showMessageDialog(null, &quot;启动成功！&quot;);</span>
+<span class="nc" id="L555">		}</span>
+		else {
+<span class="nc" id="L557">			log.info(&quot;RunTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L558">			JOptionPane.showMessageDialog(null, &quot;当前状态不可被启动！&quot;);</span>
+		}
+<span class="nc" id="L560">	}</span>
+
+	/**
+	 * 阻塞某个计划项
+	 */
+	public void blockTrain() {
+<span class="nc" id="L566">		StringBuilder trainInfo = new StringBuilder();</span>
+<span class="nc" id="L567">		PlanningEntry&lt;Carriage&gt; te = findTrainEntry(trainInfo);</span>
+<span class="nc bnc" id="L568" title="All 2 branches missed.">		if (te == null) {</span>
+<span class="nc" id="L569">			log.info(&quot;BlockTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L570">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，阻塞失败！&quot;);</span>
+<span class="nc" id="L571">		}</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">		else if (((TrainEntry&lt;Carriage&gt;) te).block()) {</span>
+<span class="nc" id="L573">			log.info(&quot;BlockTrain;&quot; + trainInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L574">			JOptionPane.showMessageDialog(null, &quot;阻塞成功！&quot;);</span>
+<span class="nc" id="L575">		}</span>
+		else {
+<span class="nc" id="L577">			log.info(&quot;BlockTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L578">			JOptionPane.showMessageDialog(null, &quot;当前状态不可阻塞！&quot;);</span>
+		}
+<span class="nc" id="L580">	}</span>
+
+	/**
+	 * 结束某个计划项
+	 */
+	public void endTrain() {
+<span class="nc" id="L586">		StringBuilder trainInfo = new StringBuilder();</span>
+<span class="nc" id="L587">		PlanningEntry&lt;Carriage&gt; te = findTrainEntry(trainInfo);</span>
+<span class="nc bnc" id="L588" title="All 2 branches missed.">		if (te == null) {</span>
+<span class="nc" id="L589">			log.info(&quot;EndTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L590">			JOptionPane.showMessageDialog(null, &quot;没有该计划项，结束失败！&quot;);</span>
+<span class="nc" id="L591">		}</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">		else if (te.end()) {</span>
+<span class="nc" id="L593">			log.info(&quot;EndTrain;&quot; + trainInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L594">			JOptionPane.showMessageDialog(null, &quot;结束成功！&quot;);</span>
+<span class="nc" id="L595">		}</span>
+		else{
+<span class="nc" id="L597">			log.info(&quot;EndTrain;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L598">			JOptionPane.showMessageDialog(null, &quot;当前状态不可被结束！&quot;);</span>
+		}
+<span class="nc" id="L600">	}</span>
+
+	/**
+	 * 选定一个计划项，查看它的当前状态
+	 */
+	public void getState() {
+<span class="nc" id="L606">		StringBuilder trainInfo = new StringBuilder();</span>
+<span class="nc" id="L607">		PlanningEntry&lt;Carriage&gt; te = findTrainEntry(trainInfo);</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">		if (te == null){</span>
+<span class="nc" id="L609">			log.info(&quot;GetState;&quot; + trainInfo.toString() + &quot;;fail&quot;);</span>
+<span class="nc" id="L610">			JOptionPane.showMessageDialog(null, &quot;此计划项不存在！&quot;);</span>
+<span class="nc" id="L611">		}</span>
+		else{
+<span class="nc" id="L613">			log.info(&quot;GetState;&quot; + trainInfo.toString() + &quot;;success&quot;);</span>
+<span class="nc" id="L614">			JOptionPane.showMessageDialog(null, &quot;此计划项状态为：&quot; + te.getState());</span>
+		}
+<span class="nc" id="L616">	}</span>
+
+	/**
+	 * 检测当前的计划项集合中可能存在的资源独占冲突
+	 */
+	public void checkConflict() {
+<span class="nc bnc" id="L622" title="All 2 branches missed.">		if (checkConf.checkResourceExclusiveConflict(board.getTrainEntries())) {</span>
+<span class="nc" id="L623">			log.info(&quot;CheckResourceConflict;existence;success&quot;);</span>
+<span class="nc" id="L624">			JOptionPane.showMessageDialog(null, &quot;存在资源独占冲突！&quot;);</span>
+<span class="nc" id="L625">		}</span>
+		else {
+<span class="nc" id="L627">			log.info(&quot;CheckResourcConflict;inexistence;success&quot;);</span>
+<span class="nc" id="L628">			JOptionPane.showMessageDialog(null, &quot;不存在资源独占冲突！&quot;);</span>
+		}
+<span class="nc" id="L630">	}</span>
+
+	/**
+	 * 针对用户选定的某个资源，列出使用该资源的所有计划项
+	 */
+	public void findAllEntryUseResource() {
+<span class="nc" id="L636">		String id = JOptionPane.showInputDialog(&quot;车厢的编号：&quot;);</span>
+<span class="nc" id="L637">		String type = JOptionPane.showInputDialog(&quot;车厢的型号：&quot;);</span>
+<span class="nc" id="L638">		String seats = JOptionPane.showInputDialog(&quot;车厢的定员数：&quot;);</span>
+<span class="nc" id="L639">		String manufactureYear = JOptionPane.showInputDialog(&quot;车厢的生产年份：&quot;);</span>
+<span class="nc" id="L640">		Carriage carriage = new Carriage(Integer.parseInt(id), type, Integer.parseInt(seats),</span>
+<span class="nc" id="L641">				Integer.parseInt(manufactureYear));</span>
+<span class="nc" id="L642">		String carriageInfo = &quot;Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,ManufactureYear:&quot;</span>
+<span class="nc" id="L643">				+ manufactureYear;</span>
+<span class="nc bnc" id="L644" title="All 2 branches missed.">		if (!carriages.contains(carriage)) {</span>
+<span class="nc" id="L645">			log.info(&quot;FindAllEntryUseResource;&quot; + carriageInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L646">			JOptionPane.showMessageDialog(null, &quot;此资源不存在！&quot;);</span>
+<span class="nc" id="L647">			return;</span>
+		}
+<span class="nc" id="L649">		List&lt;PlanningEntry&lt;Carriage&gt;&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">		for (PlanningEntry&lt;Carriage&gt; pe : board.getTrainEntries())</span>
+<span class="nc bnc" id="L651" title="All 2 branches missed.">			if (((TrainEntry&lt;Carriage&gt;) pe).getResources().contains(carriage))</span>
+<span class="nc" id="L652">				list.add(pe);</span>
+
+<span class="nc" id="L654">		Object[][] str = new Object[list.size()][4];</span>
+<span class="nc bnc" id="L655" title="All 2 branches missed.">		for (int i = 0; i &lt; list.size(); i++) {</span>
+<span class="nc" id="L656">			TrainEntry&lt;Carriage&gt; fe = (TrainEntry&lt;Carriage&gt;) list.get(i);</span>
+<span class="nc" id="L657">			String[] s = { fe.getName(), fe.getTimeslot().toString(), fe.getLocations().get(0).getName() + &quot;-&gt;&quot;</span>
+<span class="nc" id="L658">					+ fe.getLocations().get(fe.getLocations().size() - 1).getName(), fe.getState() };</span>
+<span class="nc" id="L659">			str[i] = s;</span>
+		}
+<span class="nc" id="L661">		log.info(&quot;FindAllEntryUseResource;&quot; + carriageInfo + &quot;;success&quot;);</span>
+<span class="nc" id="L662">		String[] title = { &quot;Entry&quot;, &quot;Time&quot;, &quot;From and To&quot;, &quot;State&quot; };</span>
+<span class="nc" id="L663">		board.visualize(str, title, &quot;使用该资源的所有计划项&quot;);</span>
+<span class="nc" id="L664">	}</span>
+
+	/**
+	 * 针对用户选定的某个资源和某个计划项之后，找出它的前序计划项
+	 */
+	public void findPreEntryUseResource() {
+<span class="nc" id="L670">		String id = JOptionPane.showInputDialog(&quot;车厢的编号：&quot;);</span>
+<span class="nc" id="L671">		String type = JOptionPane.showInputDialog(&quot;车厢的型号：&quot;);</span>
+<span class="nc" id="L672">		String seats = JOptionPane.showInputDialog(&quot;车厢的定员数：&quot;);</span>
+<span class="nc" id="L673">		String manufactureYear = JOptionPane.showInputDialog(&quot;车厢的生产年份：&quot;);</span>
+<span class="nc" id="L674">		Carriage carriage = new Carriage(Integer.parseInt(id), type, Integer.parseInt(seats),</span>
+<span class="nc" id="L675">				Integer.parseInt(manufactureYear));</span>
+<span class="nc" id="L676">		String carriageInfo = &quot;,Code:&quot; + id + &quot;,Type:&quot; + type + &quot;,Seats:&quot; + seats + &quot;,ManufactureYear:&quot;</span>
+<span class="nc" id="L677">				+ manufactureYear;</span>
+<span class="nc" id="L678">		StringBuilder trainInfo = new StringBuilder();</span>
+<span class="nc" id="L679">		PlanningEntry&lt;Carriage&gt; te = findTrainEntry(trainInfo);</span>
+<span class="nc bnc" id="L680" title="All 2 branches missed.">		if (!carriages.contains(carriage)) {</span>
+<span class="nc" id="L681">			log.info(&quot;FindPreEntryUseResource;&quot; + trainInfo + carriageInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L682">			JOptionPane.showMessageDialog(null, &quot;此资源不存在！&quot;);</span>
+<span class="nc" id="L683">		}</span>
+<span class="nc bnc" id="L684" title="All 2 branches missed.">		else if (te == null) {</span>
+<span class="nc" id="L685">			log.info(&quot;FindPreEntryUseResource;&quot; + trainInfo + carriageInfo + &quot;;fail&quot;);</span>
+<span class="nc" id="L686">			JOptionPane.showMessageDialog(null, &quot;此计划项不存在！&quot;);</span>
+<span class="nc" id="L687">		}</span>
+		else {
+<span class="nc" id="L689">			TrainEntry&lt;Carriage&gt; prete = (TrainEntry&lt;Carriage&gt;) checkConf.findPreEntryPerResource(carriage, te,</span>
+<span class="nc" id="L690">					board.getTrainEntries());</span>
+<span class="nc" id="L691">			JOptionPane.showMessageDialog(null,</span>
+<span class="nc" id="L692">					&quot;Entry:&quot; + prete.getName() + &quot;\nTime:&quot; + prete.getTimeslot().toString() + &quot;\nFrom:&quot;</span>
+<span class="nc" id="L693">							+ prete.getLocations().get(0).getName() + &quot;\nTo:&quot;</span>
+<span class="nc" id="L694">							+ prete.getLocations().get(prete.getLocations().size() - 1).getName() + &quot;\nState:&quot;</span>
+<span class="nc" id="L695">							+ prete.getState());</span>
+<span class="nc" id="L696">			log.info(&quot;FindPreEntryUseResource;&quot; + trainInfo + carriageInfo + &quot;;success&quot;);</span>
+		}
+<span class="nc" id="L698">	}</span>
+
+	/**
+	 * 选定特定位置，可视化展示当前时刻该位置的信息板
+	 */
+	public void findLocation() {
+<span class="nc" id="L704">		String name = JOptionPane.showInputDialog(&quot;车站的名字:&quot;);</span>
+<span class="nc" id="L705">		String time = JOptionPane.showInputDialog(&quot;查询时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L706">		String regex = &quot;\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}&quot;;</span>
+<span class="nc bnc" id="L707" title="All 2 branches missed.">		while (!time.matches(regex))</span>
+<span class="nc" id="L708">			time = JOptionPane.showInputDialog(&quot;查询时间，格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc" id="L709">		Location loc = new Location(name, true);</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">		if (!locations.contains(loc)) {</span>
+<span class="nc" id="L711">			log.info(&quot;FindLocation;Name:&quot; + name + &quot;,Time:&quot; + time + &quot;;fail&quot;);</span>
+<span class="nc" id="L712">			JOptionPane.showMessageDialog(null, &quot;无此位置！&quot;);</span>
+<span class="nc" id="L713">			return;</span>
+		}
+<span class="nc" id="L715">		log.info(&quot;FindLocation;Name:&quot; + name + &quot;,Time:&quot; + time + &quot;;success&quot;);</span>
+<span class="nc" id="L716">		board.allEntryAtLocation(loc, time);</span>
+<span class="nc" id="L717">	}</span>
+	
+	/**
+	 * 显示日志
+	 */
+	public void readLog() {
+<span class="nc" id="L723">		Scanner input = null;</span>
+		try {
+<span class="nc" id="L725">			input = new Scanner(new File(&quot;src/log/trainlog.log&quot;));</span>
+<span class="nc" id="L726">		} catch (Exception e) {</span>
+<span class="nc" id="L727">			JOptionPane.showMessageDialog(null, &quot;日志文件错误！&quot;);</span>
+<span class="nc" id="L728">			return;</span>
+		}
+<span class="nc" id="L730">		DateTimeFormatter df = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+<span class="nc" id="L731">		LocalDateTime start = null, end = null;</span>
+<span class="nc" id="L732">		JOptionPane.showMessageDialog(null, &quot;以下四项内容不填或格式不符均视为该项无限制&quot;);</span>
+<span class="nc" id="L733">		String startTime = JOptionPane.showInputDialog(&quot;查询时间段的开始时间\n格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">		if(startTime.matches(&quot;\\d{4}-\\d{2}-\\d{2} \\d{2}-\\{2}&quot;))</span>
+<span class="nc" id="L735">			start = LocalDateTime.parse(startTime, df);</span>
+<span class="nc" id="L736">		String endTime = JOptionPane.showInputDialog(&quot;查询时间段的开始时间\n格式yyyy-MM-dd HH:mm：&quot;);</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">		if(endTime.matches(&quot;\\d{4}-\\d{2}-\\d{2} \\d{2}-\\{2}&quot;))</span>
+<span class="nc" id="L738">			end = LocalDateTime.parse(endTime, df);</span>
+<span class="nc" id="L739">		String actionType = JOptionPane.showInputDialog(&quot;查询操作类型：&quot;);</span>
+<span class="nc" id="L740">		String entryName = JOptionPane.showInputDialog(&quot;查询计划项名：&quot;);</span>
+		
+<span class="nc" id="L742">		List&lt;String[]&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L743">		DateFormat formatFrom = new SimpleDateFormat(&quot;MMM dd, yyyy KK:mm:ss aa&quot;, Locale.ENGLISH);</span>
+<span class="nc" id="L744">		DateFormat formatTo = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+<span class="nc" id="L745">		DateTimeFormatter df2 = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+		try {
+<span class="nc bnc" id="L747" title="All 2 branches missed.">			while(input.hasNext()) {</span>
+<span class="nc" id="L748">			String[] logline = new String[5];</span>
+<span class="nc" id="L749">			String line1 = input.nextLine();</span>
+<span class="nc" id="L750">			String line2 = input.nextLine();</span>
+<span class="nc" id="L751">			int pos = line1.indexOf(&quot;train&quot;);</span>
+<span class="nc" id="L752">			logline[0] = line1.substring(0, pos-1);</span>
+<span class="nc" id="L753">			Date date = formatFrom.parse(logline[0]);</span>
+<span class="nc" id="L754">	        LocalDateTime time = LocalDateTime.parse(formatTo.format(date), df2);</span>
+<span class="nc" id="L755">			pos = line2.indexOf(&quot;:&quot;);</span>
+<span class="nc" id="L756">			logline[1] = line2.substring(0, pos);</span>
+<span class="nc" id="L757">			String[] message = line2.substring(pos).split(&quot;;&quot;);</span>
+<span class="nc" id="L758">			logline[2] = message[0];</span>
+<span class="nc" id="L759">			logline[3] = message[1];</span>
+<span class="nc" id="L760">			logline[4] = message[2];</span>
+<span class="nc bnc" id="L761" title="All 8 branches missed.">			if((start != null &amp;&amp; start.isAfter(time)) || (end != null &amp;&amp; end.isBefore(time)))</span>
+<span class="nc" id="L762">				continue;</span>
+<span class="nc bnc" id="L763" title="All 4 branches missed.">			if(actionType != &quot;&quot; &amp;&amp; actionType.equals(logline[2]))</span>
+<span class="nc" id="L764">				continue;</span>
+<span class="nc bnc" id="L765" title="All 4 branches missed.">			if(entryName != &quot;&quot; &amp;&amp; entryName.equals(logline[4]))</span>
+<span class="nc" id="L766">				continue;</span>
+<span class="nc" id="L767">			list.add(logline);</span>
+			}
+<span class="nc" id="L769">		} catch(ParseException e) {</span>
+<span class="nc" id="L770">			return;</span>
+		}
+<span class="nc" id="L772">		input.close();</span>
+<span class="nc" id="L773">		String[] title = {&quot;Time&quot;, &quot;Type&quot;, &quot;Option&quot;, &quot;Message&quot;, &quot;Result&quot;};</span>
+<span class="nc" id="L774">		Object[][] content = new Object[list.size()][5];</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">		for(int i = 0; i &lt; list.size(); i++)</span>
+<span class="nc" id="L776">			content[i] = list.get(i);</span>
+<span class="nc" id="L777">		board.visualize(content, title, &quot;log&quot;);</span>
+<span class="nc" id="L778">	}</span>
+
+	/**
+	 * 主程序
+	 */
+	public static void main(String[] args) {
+<span class="nc" id="L784">		new TrainScheduleApp().run();</span>
+<span class="nc" id="L785">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

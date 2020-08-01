@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>TrainEntryTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">train</a> &gt; <span class="el_source">TrainEntryTest.java</span></div><h1>TrainEntryTest.java</h1><pre class="source lang-java linenums">package train;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import common.plan.PlanningEntryInstanceTest;
+import common.time.Timeslot;
+
+<span class="fc" id="L15">public class TrainEntryTest extends PlanningEntryInstanceTest&lt;Carriage&gt; {</span>
+
+	// Test strategy
+	// 测试allocateTrain()
+	// 状态可分配资源，状态不可分配资源
+	// 测试getLocations()
+	// 测试返回的位置列表和预期的是否相同
+	// 测试getResources()
+	// 测试返回的资源列表和预期的是否相同
+	// 测试getTimeslot()
+	// 测试返回的时刻表和预期的是否相同
+	// 测试block()
+	// 此时状态为RUNNING或BLOCKED，此时状态不为RUNNING和BLOCKED
+	// 测试compareTo()
+	// 在pe之前开始，在pe之后开始，在pe同时开始	
+
+<span class="fc" id="L31">	final Location loc1 = new Location(&quot;place1&quot;, true);</span>
+<span class="fc" id="L32">	final Location loc2 = new Location(&quot;place2&quot;, true);</span>
+<span class="fc" id="L33">	final Location loc3 = new Location(&quot;place3&quot;, true);</span>
+<span class="fc" id="L34">	final String t0 = &quot;2020-04-27 13:00&quot;;</span>
+<span class="fc" id="L35">	final String t1 = &quot;2020-04-27 14:00&quot;;</span>
+<span class="fc" id="L36">	final String t2 = &quot;2020-04-27 15:00&quot;;</span>
+<span class="fc" id="L37">	final String t3 = &quot;2020-04-27 16:00&quot;;</span>
+<span class="fc" id="L38">	final String t4 = &quot;2020-04-27 17:00&quot;;</span>
+<span class="fc" id="L39">	final String t5 = &quot;2020-04-27 18:00&quot;;</span>
+<span class="fc" id="L40">	final Carriage c1 = new Carriage(1, &quot;ErDengZuo&quot;, 100, 2020);</span>
+<span class="fc" id="L41">	final Carriage c2 = new Carriage(2, &quot;ErDengZuo&quot;, 100, 2020);</span>
+
+	@Override
+	public PlanningEntry&lt;Carriage&gt; entryInstance() {
+<span class="fc" id="L45">		List&lt;Location&gt; locationList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L46">		List&lt;String&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L47">		locationList.add(loc1);</span>
+<span class="fc" id="L48">		locationList.add(loc2);</span>
+<span class="fc" id="L49">		locationList.add(loc3);</span>
+<span class="fc" id="L50">		times.add(t1);</span>
+<span class="fc" id="L51">		times.add(t2);</span>
+<span class="fc" id="L52">		times.add(t3);</span>
+<span class="fc" id="L53">		times.add(t4);</span>
+<span class="fc" id="L54">		return PlanningEntry.trainEntry(name, locationList, times);</span>
+	}
+
+	@Test
+	public void testAllocateTrain() {
+<span class="fc" id="L59">		PlanningEntry&lt;Carriage&gt; pe = entryInstance();</span>
+<span class="fc" id="L60">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+		//状态可分配资源
+<span class="fc" id="L62">		train.add(c1);</span>
+<span class="fc" id="L63">		train.add(c2);</span>
+<span class="fc" id="L64">		assertTrue(((TrainEntry&lt;Carriage&gt;) pe).allocateTrain(train));</span>
+		//状态不可分配资源
+<span class="fc" id="L66">		pe.cancel();</span>
+<span class="fc" id="L67">		assertFalse(((TrainEntry&lt;Carriage&gt;) pe).allocateTrain(train));</span>
+<span class="fc" id="L68">	}</span>
+
+	@Test
+	public void testGetLocations() {
+<span class="fc" id="L72">		PlanningEntry&lt;Carriage&gt; pe = entryInstance();</span>
+<span class="fc" id="L73">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L74">		locations.add(loc1);</span>
+<span class="fc" id="L75">		locations.add(loc2);</span>
+<span class="fc" id="L76">		locations.add(loc3);</span>
+<span class="fc" id="L77">		assertEquals(locations, ((TrainEntry&lt;Carriage&gt;) pe).getLocations());</span>
+<span class="fc" id="L78">	}</span>
+
+	@Test
+	public void tsestGetResources() {
+<span class="fc" id="L82">		PlanningEntry&lt;Carriage&gt; pe = entryInstance();</span>
+<span class="fc" id="L83">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L84">		train.add(c1);</span>
+<span class="fc" id="L85">		train.add(c2);</span>
+<span class="fc" id="L86">		((TrainEntry&lt;Carriage&gt;) pe).allocateTrain(train);</span>
+<span class="fc" id="L87">		assertEquals(train, ((TrainEntry&lt;Carriage&gt;) pe).getResources());</span>
+<span class="fc" id="L88">	}</span>
+
+	@Test
+	public void testGetTimeslot() {
+<span class="fc" id="L92">		PlanningEntry&lt;Carriage&gt; pe = entryInstance();</span>
+<span class="fc" id="L93">		List&lt;Timeslot&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L94">		times.add(new Timeslot(t1, t2));</span>
+<span class="fc" id="L95">		times.add(new Timeslot(t3, t4));</span>
+<span class="fc" id="L96">		assertEquals(times, ((TrainEntry&lt;Carriage&gt;) pe).getTimeslot());</span>
+<span class="fc" id="L97">	}</span>
+
+	@Test
+	public void testBlock() {
+<span class="fc" id="L101">		PlanningEntry&lt;Carriage&gt; pe = entryInstance();</span>
+<span class="fc" id="L102">		List&lt;Carriage&gt; train = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L103">		train.add(c1);</span>
+<span class="fc" id="L104">		train.add(c2);</span>
+<span class="fc" id="L105">		((TrainEntry&lt;Carriage&gt;) pe).allocateTrain(train);</span>
+		//此时状态不为RUNNING和BLOCKED
+<span class="fc" id="L107">		assertFalse(((TrainEntry&lt;Carriage&gt;) pe).block());</span>
+		//此时状态为RUNNING
+<span class="fc" id="L109">		pe.running();</span>
+<span class="fc" id="L110">		assertTrue(((TrainEntry&lt;Carriage&gt;) pe).block());</span>
+		//此时状态为BLOCKED
+<span class="fc" id="L112">		assertTrue(((TrainEntry&lt;Carriage&gt;) pe).block());</span>
+<span class="fc" id="L113">	}</span>
+
+	@Test
+	public void testCompareTo() {
+<span class="fc" id="L117">		PlanningEntry&lt;Carriage&gt; pe = entryInstance();</span>
+<span class="fc" id="L118">		List&lt;Location&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L119">		locations.add(loc1);</span>
+<span class="fc" id="L120">		locations.add(loc2);</span>
+<span class="fc" id="L121">		locations.add(loc3);</span>
+		//在pe之前开始
+<span class="fc" id="L123">		List&lt;String&gt; times1 = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L124">		times1.add(t0);</span>
+<span class="fc" id="L125">		times1.add(t2);</span>
+<span class="fc" id="L126">		times1.add(t3);</span>
+<span class="fc" id="L127">		times1.add(t4);</span>
+<span class="fc" id="L128">		PlanningEntry&lt;Carriage&gt; beforePe = PlanningEntry.trainEntry(name, locations, times1);</span>
+<span class="fc" id="L129">		assertEquals(1, pe.compareTo(beforePe));</span>
+		//在pe之后开始
+<span class="fc" id="L131">        List&lt;String&gt; times2 = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L132">		times2.add(t2);</span>
+<span class="fc" id="L133">		times2.add(t3);</span>
+<span class="fc" id="L134">		times2.add(t4);</span>
+<span class="fc" id="L135">		times2.add(t5);</span>
+<span class="fc" id="L136">        PlanningEntry&lt;Carriage&gt; afterPe = PlanningEntry.trainEntry(name, locations, times2);</span>
+<span class="fc" id="L137">		assertEquals(-1, pe.compareTo(afterPe));</span>
+<span class="fc" id="L138">		List&lt;String&gt; times3 = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L139">		times3.add(t1);</span>
+<span class="fc" id="L140">		times3.add(t2);</span>
+<span class="fc" id="L141">		times3.add(t3);</span>
+<span class="fc" id="L142">		times3.add(t4);</span>
+        //与pe同时开始
+<span class="fc" id="L144">        PlanningEntry&lt;Carriage&gt; equalPe = PlanningEntry.trainEntry(name, locations, times3);</span>
+<span class="fc" id="L145">        assertEquals(0, pe.compareTo(equalPe));</span>
+<span class="fc" id="L146">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

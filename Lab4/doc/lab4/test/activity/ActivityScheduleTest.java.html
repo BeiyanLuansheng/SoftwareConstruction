@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ActivityScheduleTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">test</a> &gt; <a href="index.source.html" class="el_package">activity</a> &gt; <span class="el_source">ActivityScheduleTest.java</span></div><h1>ActivityScheduleTest.java</h1><pre class="source lang-java linenums">package activity;
+
+import static org.junit.Assert.*;
+import org.junit.rules.ExpectedException;
+
+import common.location.Location;
+import common.plan.PlanningEntry;
+import exceptions.CannotCancelledException;
+import exceptions.EntryUseResourceOrLocationException;
+import exceptions.ResourceOrLocationConflictException;
+
+import org.junit.Test;
+import org.junit.Rule;
+
+<span class="fc" id="L15">public class ActivityScheduleTest {</span>
+	// Test stragey
+	// 测试addMaterial()
+	// 材料未在列表中，材料已在列表中
+	// 测试removeMaterial()
+	// 材料未在列表中，材料在列表中，材料正在被使用
+	// 测试addLocation()
+	// 位置未在列表中，位置已在列表中
+	// 测试removeLocation()
+	// 位置未在列表中，位置已在列表中，位置在使用中
+	// 测试addActivity()
+	// 计划项不存在，计划项已存在，设置的位置导致与其他计划项产生位置独占冲突
+	// 测试cancelActivity()
+	// 计划项为空，计划项不为空可取消，计划项不为空不可取消
+	// 测试allocateActivity()
+	// 可分配资源，状态不允许分配资源
+	// 测试setLocation()
+	// 可设置位置，不可设置位置，设置为之后导致与其他计划项产生位置独占冲突
+	
+	@Rule
+<span class="fc" id="L35">	public ExpectedException exception = ExpectedException.none();</span>
+	
+	//test for addMaterial
+	@Test
+	public void testAddMaterial() {
+<span class="fc" id="L40">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L41">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+		//材料未在列表中
+<span class="fc" id="L43">		assertTrue(fsa.addMaterial(material));</span>
+		//材料已在列表中
+<span class="fc" id="L45">		assertFalse(fsa.addMaterial(material));</span>
+<span class="fc" id="L46">	}</span>
+	
+	//tests for removeMaterial
+	@Test
+	public void testRemoveMaterial() throws EntryUseResourceOrLocationException {
+<span class="fc" id="L51">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L52">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+		//材料未在列表中
+<span class="fc" id="L54">		assertFalse(fsa.removeMaterial(material));</span>
+		//材料已在列表中
+<span class="fc" id="L56">		fsa.addMaterial(material);</span>
+<span class="fc" id="L57">		assertTrue(fsa.removeMaterial(material));</span>
+<span class="fc" id="L58">	}</span>
+	
+	//材料正在被使用
+	@Test(expected = EntryUseResourceOrLocationException.class)
+	public void testRemoveMaterialException() throws ResourceOrLocationConflictException, EntryUseResourceOrLocationException {
+<span class="fc" id="L63">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L64">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L65">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L66">		Location Loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L67">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L68">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L69">		fsa.addMaterial(material);</span>
+<span class="fc" id="L70">		fsa.addLocation(Loc);</span>
+<span class="fc" id="L71">		fsa.addActivity(name, start, end, Loc);</span>
+<span class="fc" id="L72">		PlanningEntry&lt;Material&gt; fe = fsa.findActivityEntry(name, Loc.getName(), start, end);</span>
+<span class="fc" id="L73">		fsa.allocateActivity(fe, material);</span>
+<span class="fc" id="L74">		fe.running();</span>
+<span class="nc" id="L75">		fsa.removeMaterial(material);</span>
+<span class="nc" id="L76">	}</span>
+	
+	// tests for addLocation
+	@Test
+	public void testAddLocation() {
+<span class="fc" id="L81">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L82">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+		// 位置不在列表中
+<span class="fc" id="L84">		assertTrue(fsa.addLocation(loc));</span>
+		// 位置已在列表中
+<span class="fc" id="L86">		assertFalse(fsa.addLocation(loc));</span>
+<span class="fc" id="L87">	}</span>
+	
+	// tests for removeLocation
+	@Test
+	public void testRemoveLocation() throws EntryUseResourceOrLocationException {
+<span class="fc" id="L92">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L93">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+		// 位置不在列表中
+<span class="fc" id="L95">		assertFalse(fsa.removeLocation(loc));</span>
+		// 位置已在列表中
+<span class="fc" id="L97">		fsa.addLocation(loc);</span>
+<span class="fc" id="L98">		assertTrue(fsa.removeLocation(loc));</span>
+<span class="fc" id="L99">	}</span>
+	
+	//位置正在被使用
+	@Test(expected = EntryUseResourceOrLocationException.class)
+	public void testRemoveLocationException() throws ResourceOrLocationConflictException, EntryUseResourceOrLocationException {
+<span class="fc" id="L104">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L105">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L106">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L107">		Location Loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L108">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L109">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L110">		fsa.addMaterial(material);</span>
+<span class="fc" id="L111">		fsa.addLocation(Loc);</span>
+<span class="fc" id="L112">		fsa.addActivity(name, start, end, Loc);</span>
+<span class="fc" id="L113">		PlanningEntry&lt;Material&gt; fe = fsa.findActivityEntry(name, Loc.getName(), start, end);</span>
+<span class="fc" id="L114">		fsa.allocateActivity(fe, material);</span>
+<span class="fc" id="L115">		fe.running();</span>
+<span class="nc" id="L116">		fsa.removeLocation(Loc);</span>
+<span class="nc" id="L117">	}</span>
+	
+	//tests for addActivity
+	@Test
+	public void testAddActivity() throws ResourceOrLocationConflictException {
+<span class="fc" id="L122">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L123">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L124">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L125">		Location Loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L126">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L127">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L128">		fsa.addMaterial(material);</span>
+<span class="fc" id="L129">		fsa.addLocation(Loc);</span>
+		//计划项还不存在
+<span class="fc" id="L131">		assertTrue(fsa.addActivity(name, start, end, Loc));</span>
+		//计划项已经存在
+<span class="fc" id="L133">		assertFalse(fsa.addActivity(name, start, end, Loc));</span>
+<span class="fc" id="L134">	}</span>
+
+	//产生位置独占冲突
+	@Test(expected = ResourceOrLocationConflictException.class)
+	public void testAddActivityException() throws ResourceOrLocationConflictException {
+<span class="fc" id="L139">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L140">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L141">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L142">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L143">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L144">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L145">		fsa.addMaterial(material);</span>
+<span class="fc" id="L146">		fsa.addLocation(loc);</span>
+<span class="fc" id="L147">		fsa.addActivity(name, start, end, loc);</span>
+<span class="nc" id="L148">		fsa.addActivity(&quot;B&quot;, start, end, loc);</span>
+<span class="nc" id="L149">	}</span>
+
+	//tests for cancelActivity
+	@Test
+	public void testCancelActivity() throws CannotCancelledException, ResourceOrLocationConflictException {
+<span class="fc" id="L154">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L155">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L156">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L157">		Location Loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L158">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L159">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L160">		fsa.addMaterial(material);</span>
+<span class="fc" id="L161">		fsa.addLocation(Loc);</span>
+<span class="fc" id="L162">		fsa.addActivity(name, start, end, Loc);</span>
+<span class="fc" id="L163">		PlanningEntry&lt;Material&gt; fe = fsa.findActivityEntry(name, Loc.getName(), start, end);</span>
+<span class="fc" id="L164">		fsa.allocateActivity(fe, material);</span>
+		//计划项为空
+<span class="fc" id="L166">		assertFalse(fsa.cancelActivity(null));</span>
+		//计划项不为空，可取消
+<span class="fc" id="L168">		assertTrue(fsa.cancelActivity(fe));</span>
+<span class="fc" id="L169">	}</span>
+	
+	//不可取消的计划项
+	@Test(expected = CannotCancelledException.class)
+	public void testCancelActivityException() throws ResourceOrLocationConflictException, CannotCancelledException {
+<span class="fc" id="L174">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L175">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L176">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L177">		Location Loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L178">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L179">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L180">		fsa.addMaterial(material);</span>
+<span class="fc" id="L181">		fsa.addLocation(Loc);</span>
+<span class="fc" id="L182">		fsa.addActivity(name, start, end, Loc);</span>
+<span class="fc" id="L183">		PlanningEntry&lt;Material&gt; fe = fsa.findActivityEntry(name, Loc.getName(), start, end);</span>
+<span class="fc" id="L184">		fsa.allocateActivity(fe, material);</span>
+<span class="fc" id="L185">		fe.running();</span>
+<span class="nc" id="L186">		fsa.cancelActivity(fe);</span>
+<span class="nc" id="L187">	}</span>
+	
+	//tests for allocateActivity
+	@Test
+	public void testAllocateActivity() throws ResourceOrLocationConflictException {
+<span class="fc" id="L192">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L193">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L194">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L195">		Location Loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L196">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L197">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L198">		fsa.addMaterial(material);</span>
+<span class="fc" id="L199">		fsa.addLocation(Loc);</span>
+<span class="fc" id="L200">		fsa.addActivity(name, start, end, Loc);</span>
+<span class="fc" id="L201">		PlanningEntry&lt;Material&gt; fe = fsa.findActivityEntry(name, Loc.getName(), start, end);</span>
+		//可以被分配资源
+<span class="fc" id="L203">		assertTrue(fsa.allocateActivity(fe, material));</span>
+		//此时状态不可被分配资源
+<span class="fc" id="L205">		fe.running();</span>
+<span class="fc" id="L206">		assertFalse(fsa.allocateActivity(fe, material));</span>
+<span class="fc" id="L207">	}</span>
+
+	//tests for setLocation
+	@Test
+	public void testSetLocation() throws ResourceOrLocationConflictException {
+<span class="fc" id="L212">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L213">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L214">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L215">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L216">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L217">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L218">		fsa.addMaterial(material);</span>
+<span class="fc" id="L219">		fsa.addLocation(loc);</span>
+<span class="fc" id="L220">		fsa.addActivity(name, start, end, loc);</span>
+<span class="fc" id="L221">		PlanningEntry&lt;Material&gt; fe = fsa.findActivityEntry(name, loc.getName(), start, end);</span>
+<span class="fc" id="L222">		fsa.allocateActivity(fe, material);</span>
+		//可以设置位置
+<span class="fc" id="L224">		assertTrue(fsa.setLocation(fe, loc));</span>
+		//不可以设置位置
+<span class="fc" id="L226">		fe.running();</span>
+<span class="fc" id="L227">		assertFalse(fsa.setLocation(fe, loc));</span>
+<span class="fc" id="L228">	}</span>
+
+	//产生位置独占冲突
+	@Test(expected = ResourceOrLocationConflictException.class)
+	public void testSetLocationException() throws ResourceOrLocationConflictException {
+<span class="fc" id="L233">		ActivityScheduleApp fsa = new ActivityScheduleApp();</span>
+<span class="fc" id="L234">		Material material = new Material(&quot;material&quot;, &quot;Learning department&quot;, &quot;2020-04-26&quot;);</span>
+<span class="fc" id="L235">		String name = &quot;A&quot;;</span>
+<span class="fc" id="L236">		Location loc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L237">		String start = &quot;2020-05-27 11:00&quot;;</span>
+<span class="fc" id="L238">		String end = &quot;2020-05-27 12:00&quot;;</span>
+<span class="fc" id="L239">		fsa.addMaterial(material);</span>
+<span class="fc" id="L240">		fsa.addLocation(loc);</span>
+<span class="fc" id="L241">		fsa.addActivity(name, start, end, loc);</span>
+<span class="fc" id="L242">		Location newLoc = new Location(&quot;Beijing&quot;, true);</span>
+<span class="fc" id="L243">		fsa.addLocation(newLoc);</span>
+<span class="nc" id="L244">		fsa.addActivity(&quot;B&quot;, start, end, newLoc);</span>
+<span class="nc" id="L245">		PlanningEntry&lt;Material&gt; fe = fsa.findActivityEntry(&quot;B&quot;, newLoc.getName(), start, end);</span>
+<span class="nc" id="L246">		fsa.setLocation(fe, loc);</span>
+<span class="nc" id="L247">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>

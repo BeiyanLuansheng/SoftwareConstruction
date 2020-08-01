@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MultipleSortedResource.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Test (2020-5-28 16:19:10)</a> &gt; <a href="../../index.html" class="el_group">lab4</a> &gt; <a href="../index.html" class="el_bundle">src</a> &gt; <a href="index.source.html" class="el_package">common.resource</a> &gt; <span class="el_source">MultipleSortedResource.java</span></div><h1>MultipleSortedResource.java</h1><pre class="source lang-java linenums">package common.resource;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 一个immutable的类型，表示有序的一组资源
+ * 
+ * @param &lt;R&gt; 资源类型
+ */
+<span class="pc bpc" id="L13" title="1 of 2 branches missed.">public class MultipleSortedResource&lt;R&gt; implements MultipleSortedResourceEntry&lt;R&gt; {</span>
+
+	private final List&lt;R&gt; train;
+
+	// Abstraction function:
+	// 以train中的顺序排好序的，有train.size()个个体的一组资源
+	// Representation invariant:
+	// train!=null
+	// train.size()&gt;0
+	// train中不能有重复的车厢
+	// Safety from rep exposure:
+	// 所有的数据域都是私有的且使用final限定
+	// 获得资源时用Collections.unmodifiableList()转化为不可变的List输出
+
+	/**
+	 * 创建一个资源组
+	 * 
+	 * @param train 指定的资源组，非空，元素个数大于0
+	 */
+<span class="fc" id="L32">	public MultipleSortedResource(List&lt;R&gt; train) {</span>
+		// 不满足非空或元素个数大于0的前置条件，抛出异常
+<span class="pc bpc" id="L34" title="2 of 4 branches missed.">		if (train == null || train.size() == 0)</span>
+<span class="nc" id="L35">			throw new IllegalArgumentException(&quot;空元素&quot;);</span>
+<span class="fc" id="L36">		Set&lt;R&gt; carrigeSet = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">		for (R carriage : train) {</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">			if (carrigeSet.contains(carriage))</span>
+<span class="nc" id="L39">				throw new IllegalArgumentException(&quot;车厢资源有重复&quot;);</span>
+<span class="fc" id="L40">			carrigeSet.add(carriage);</span>
+		}
+<span class="fc" id="L42">		this.train = train;</span>
+<span class="fc" id="L43">		checkRep();</span>
+<span class="fc" id="L44">	}</span>
+
+	private void checkRep() {
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">		assert this.train != null;</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">		assert this.train.size() &gt; 0;</span>
+<span class="fc" id="L49">		Set&lt;R&gt; carrigeSet = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">		for (R carriage : this.train) {</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">			if (carrigeSet.contains(carriage))</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">				assert false;</span>
+<span class="fc" id="L53">			carrigeSet.add(carriage);</span>
+		}
+<span class="fc" id="L55">	}</span>
+
+	@Override
+	public List&lt;R&gt; getResources() {
+<span class="fc" id="L59">		checkRep();</span>
+<span class="fc" id="L60">		return Collections.unmodifiableList(train);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>Test (2020-5-28 16:19:10)</div></body></html>
